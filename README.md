@@ -2,6 +2,12 @@
 
 A sophisticated web experience combining polytopal field visualization with advanced quantum background effects.
 
+## 🚀 Live Demo
+
+**View the live site**: [https://domusgpt.github.io/ClearSeas-Enhanced/](https://domusgpt.github.io/ClearSeas-Enhanced/)
+
+**Repository**: [https://github.com/Domusgpt/ClearSeas-Enhanced](https://github.com/Domusgpt/ClearSeas-Enhanced)
+
 ## Overview
 
 This project merges the best aspects of two visualization systems:
@@ -83,7 +89,7 @@ ClearSeas-Enhanced/
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Domusgpt/ClearSeas-Enhanced.git
 cd ClearSeas-Enhanced
 ```
 
