@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/clear-seas-home.css">
+    <link rel="stylesheet" href="styles/video-backgrounds.css">
 </head>
 <body>
     <canvas id="polytopal-field" aria-hidden="true"></canvas>
@@ -18,7 +19,7 @@
     <header class="site-header" data-animate="reveal">
         <div class="container header-inner">
             <a class="brand" href="#hero">
-                <span class="brand-mark" aria-hidden="true">◇</span>
+                <img src="assets/images/css-logo.png" alt="Clear Seas Solutions" class="brand-logo" style="height: 40px; width: auto; margin-right: 12px;">
                 <span class="brand-name">Clear Seas Solutions</span>
             </a>
             <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">
@@ -38,6 +39,10 @@
 
     <main class="site-main">
         <section id="hero" class="hero">
+            <!-- Video Background for Hero -->
+            <div class="video-background">
+                <video data-src="assets/videos/hero-bg.mp4" muted loop playsinline class="video-bg-abstract"></video>
+            </div>
             <div class="container hero-grid">
                 <div class="hero-text" data-animate="reveal">
                     <p class="eyebrow">Artificial Intelligence • Machine Cognition • Systems Integration</p>
@@ -56,6 +61,10 @@
                 </div>
                 <div class="hero-panels" data-animate="reveal" style="--reveal-delay: 0.15s;">
                     <article class="signal-card">
+                        <!-- Video Background for Signal Card 1 -->
+                        <div class="video-background">
+                            <video data-src="assets/videos/card-cyan.mp4" muted loop playsinline class="video-bg-cyan"></video>
+                        </div>
                         <h2>Boutique Independence</h2>
                         <p>As an independent consultancy, we build solutions tailored to your actual needs—not what fits our parent company's product suite. No hidden upsells, no forced platform lock-ins.</p>
                         <div class="signal-metadata">
@@ -64,6 +73,10 @@
                         </div>
                     </article>
                     <article class="signal-card">
+                        <!-- Video Background for Signal Card 2 -->
+                        <div class="video-background">
+                            <video data-src="assets/videos/card-tech.mp4" muted loop playsinline class="video-bg-tech"></video>
+                        </div>
                         <h2>Cost-Effective Excellence</h2>
                         <p>Without corporate overhead or multi-tier sales funnels, we deliver enterprise-grade AI at lean startup economics. You pay for expertise and results, not bureaucracy.</p>
                         <div class="signal-metadata">
@@ -72,6 +85,10 @@
                         </div>
                     </article>
                     <article class="signal-card maritime">
+                        <!-- Video Background for Signal Card 3 -->
+                        <div class="video-background">
+                            <video data-src="assets/videos/card-magenta.mp4" muted loop playsinline class="video-bg-magenta"></video>
+                        </div>
                         <h2>Real-World Experience</h2>
                         <p>Decades navigating complex industries—from maritime logistics to regulatory compliance—means we understand business problems, not just algorithms.</p>
                         <div class="signal-metadata">
@@ -269,5 +286,6 @@
     </footer>
 
     <script src="scripts/clear-seas-home.js" defer></script>
+    <script src="scripts/video-backgrounds.js" defer></script>
 </body>
 </html>
