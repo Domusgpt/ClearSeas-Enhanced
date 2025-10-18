@@ -234,7 +234,9 @@ body {
 .hero {
   position: relative;
   padding: var(--space-32) 0 var(--space-24);
-  --hero-tile-image: url('../assets/patterns/pyramids-horizon.svg');
+  --hero-tile-override: initial;
+  --hero-tile-fallback: url('../assets/patterns/pyramids-horizon.svg');
+  --hero-tile-image: var(--hero-tile-override, var(--hero-tile-fallback));
   --hero-tile-size: clamp(540px, 64vw, 780px);
 }
 
@@ -264,7 +266,7 @@ body {
     repeat;
   background-position:
     center,
-    50% 36%;
+    var(--hero-tile-position, 50% 36%);
   mix-blend-mode: screen;
   opacity: 0.62;
   pointer-events: none;
@@ -272,17 +274,17 @@ body {
 }
 
 .hero[data-hero-tile="islands"] {
-  --hero-tile-image: url('../assets/patterns/floating-islands.svg');
+  --hero-tile-fallback: url('../assets/patterns/floating-islands.svg');
   --hero-tile-size: clamp(520px, 62vw, 760px);
 }
 
 .hero[data-hero-tile="neural"] {
-  --hero-tile-image: url('../assets/patterns/neural-web.svg');
+  --hero-tile-fallback: url('../assets/patterns/neural-web.svg');
   --hero-tile-size: clamp(500px, 60vw, 720px);
 }
 
 .hero[data-hero-tile="vortex"] {
-  --hero-tile-image: url('../assets/patterns/monochrome-vortex.svg');
+  --hero-tile-fallback: url('../assets/patterns/monochrome-vortex.svg');
   --hero-tile-size: clamp(500px, 58vw, 700px);
 }
 
@@ -536,7 +538,9 @@ body {
   z-index: 0;
   padding: var(--space-24) 0;
   overflow: hidden;
-  --tile-image-url: none;
+  --tile-image-override: initial;
+  --tile-image-default: none;
+  --tile-image-current: var(--tile-image-override, var(--tile-image-default));
   --tile-overlay: rgba(7, 11, 20, 0);
   --tile-size: clamp(360px, 44vw, 560px);
   --tile-size-mobile: clamp(320px, 80vw, 420px);
@@ -559,7 +563,7 @@ body {
   z-index: 0;
   background-image:
     linear-gradient(var(--tile-overlay), var(--tile-overlay)),
-    var(--tile-image-url),
+    var(--tile-image-current),
     radial-gradient(circle at 50% -10%, rgba(0, 212, 255, 0.22), transparent 70%),
     radial-gradient(circle at 80% 110%, rgba(255, 0, 110, 0.18), transparent 70%);
   background-size:
@@ -625,7 +629,7 @@ body {
 }
 
 [data-tile="islands"] {
-  --tile-image-url: url('../assets/patterns/floating-islands.svg');
+  --tile-image-default: url('../assets/patterns/floating-islands.svg');
   --tile-size: clamp(420px, 48vw, 620px);
   --tile-size-mobile: clamp(340px, 80vw, 460px);
   --tile-position: 50% 42%;
@@ -633,14 +637,14 @@ body {
 }
 
 [data-tile="pyramids"] {
-  --tile-image-url: url('../assets/patterns/pyramids-horizon.svg');
+  --tile-image-default: url('../assets/patterns/pyramids-horizon.svg');
   --tile-size: clamp(460px, 52vw, 680px);
   --tile-position: 50% 38%;
   --tile-overlay: rgba(9, 14, 26, 0.48);
 }
 
 [data-tile="neural"] {
-  --tile-image-url: url('../assets/patterns/neural-web.svg');
+  --tile-image-default: url('../assets/patterns/neural-web.svg');
   --tile-size: clamp(380px, 46vw, 560px);
   --tile-position: 50% 50%;
   --tile-overlay: rgba(6, 10, 20, 0.6);
@@ -649,7 +653,7 @@ body {
 }
 
 [data-tile="vortex"] {
-  --tile-image-url: url('../assets/patterns/monochrome-vortex.svg');
+  --tile-image-default: url('../assets/patterns/monochrome-vortex.svg');
   --tile-size: clamp(360px, 44vw, 520px);
   --tile-position: 48% 46%;
   --tile-overlay: rgba(6, 8, 14, 0.58);
