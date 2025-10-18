@@ -110,7 +110,10 @@
         </section>
 
         <!-- Capabilities Section -->
-        <section id="capabilities" class="section capabilities">
+        <section id="capabilities" class="section capabilities" style="background: rgba(12, 16, 26, 0.7); border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.10),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent"></div>
+
             <div class="container">
                 <div class="section-heading" data-animate="reveal">
                     <p class="eyebrow">How we work</p>
@@ -153,7 +156,10 @@
         </section>
 
         <!-- Products & Platforms Section -->
-        <section id="products" class="section platforms">
+        <section id="products" class="section platforms" style="background: rgba(10, 14, 22, 0.75); border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,212,255,0.09),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-secondary to-transparent"></div>
+
             <div class="container">
                 <div class="section-heading" data-animate="reveal">
                     <p class="eyebrow">Our ecosystem</p>
@@ -224,53 +230,16 @@
             </div>
         </section>
 
-        <!-- Research Section -->
+        <!-- Research Approach Section -->
         <section id="research" class="section research">
-            <div class="container">
-                <div class="section-heading" data-animate="reveal">
-                    <p class="eyebrow">Research initiatives</p>
-                    <h2>Foundational Research Programs</h2>
-                    <p>Our research focuses explore the theoretical underpinnings of machine cognition and philosophical frameworks for ethical AI development.</p>
-                </div>
-                <div class="research-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-8);">
-                    <!-- PPP Info Site -->
-                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://domusgpt.github.io/ppp-info-site/" target="_blank" rel="noopener" data-animate="reveal">
-                        <div class="lab-header">
-                            <span class="lab-label">Research Focus</span>
-                            <span class="lab-metric">Active</span>
-                        </div>
-                        <h3 style="font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: var(--font-size-2xl); color: var(--theme-primary-light); margin: var(--space-4) 0;">Paul Phillips Projects</h3>
-                        <p class="lab-description">Comprehensive exploration of polytope projection mathematics, 4D geometric processing, and holographic visualization systems.</p>
-                        <ul class="lab-list">
-                            <li>Polytopal projection mathematics</li>
-                            <li>Multi-dimensional rendering systems</li>
-                            <li>Geometric cognition frameworks</li>
-                        </ul>
-                        <span class="platform-link" style="margin-top: var(--space-4); display: block;">Visit research site →</span>
-                    </a>
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,212,255,0.08),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent"></div>
 
-                    <!-- Entropic Principles -->
-                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://entropic-principles.web.app/" target="_blank" rel="noopener" data-animate="reveal" style="--reveal-delay: 0.15s;">
-                        <div class="lab-header">
-                            <span class="lab-label">Research Focus</span>
-                            <span class="lab-metric">Active</span>
-                        </div>
-                        <h3 style="font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: var(--font-size-2xl); color: var(--theme-secondary-light); margin: var(--space-4) 0;">Entropic Principles</h3>
-                        <p class="lab-description">Philosophical and mathematical investigation into entropy, information theory, and their applications to artificial intelligence and cognitive systems.</p>
-                        <ul class="lab-list">
-                            <li>Information-theoretic AI foundations</li>
-                            <li>Entropy in machine learning</li>
-                            <li>Philosophical frameworks for AI ethics</li>
-                        </ul>
-                        <span class="platform-link" style="margin-top: var(--space-4); display: block;">Explore principles →</span>
-                    </a>
-                </div>
-
-                <!-- Research Approach -->
-                <div class="research-text" data-animate="reveal" style="margin-top: var(--space-16); max-width: 100%;">
+            <div class="container research-grid">
+                <div class="research-text" data-animate="reveal">
                     <p class="eyebrow">Our approach</p>
                     <h2>Practical AI with a research foundation.</h2>
-                    <p style="margin-bottom: var(--space-8);">We stay on the cutting edge of AI technology so you don't have to. Our solutions leverage advanced techniques when they actually solve your problem—not just because they're trendy.</p>
+                    <p>We stay on the cutting edge of AI technology so you don't have to. Our solutions leverage advanced techniques when they actually solve your problem—not just because they're trendy.</p>
                     <div class="research-points">
                         <div class="point">
                             <h3>Problem-First Thinking</h3>
@@ -286,11 +255,80 @@
                         </div>
                     </div>
                 </div>
+                <aside class="research-lab vcodex-neoskeu-card vcodex-glass" data-animate="reveal" style="--reveal-delay: 0.15s;">
+                    <div class="lab-header">
+                        <span class="lab-label">Why we're different</span>
+                        <span class="lab-metric">Independent & Honest</span>
+                    </div>
+                    <p class="lab-description">As a boutique consultancy, we have no incentive to recommend expensive solutions you don't need. Our reputation depends on delivering real value, not hitting sales quotas.</p>
+                    <ul class="lab-list">
+                        <li>No mandatory platform subscriptions</li>
+                        <li>No upselling to premium tiers</li>
+                        <li>Solutions you actually own and control</li>
+                    </ul>
+                </aside>
+            </div>
+        </section>
+
+        <!-- Research Programs Section -->
+        <section id="research-programs" class="section platforms" style="background: rgba(8, 11, 18, 0.75); border-top: 1px solid rgba(255, 255, 255, 0.08); position: relative;">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(192,132,252,0.08),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-secondary to-transparent"></div>
+
+            <!-- Subtle VIB3+ Engine Visual Integration -->
+            <div class="vib3-visual-accent" style="position: absolute; top: 10%; right: 5%; width: 180px; height: 180px; opacity: 0.15; pointer-events: none; overflow: hidden; border-radius: 50%; filter: blur(2px);">
+                <iframe src="https://domusgpt.github.io/vib3-plus-engine/" style="width: 600px; height: 600px; transform: scale(0.3) translate(-100%, -100%); border: none;"></iframe>
+            </div>
+
+            <div class="container">
+                <div class="section-heading" data-animate="reveal">
+                    <p class="eyebrow">Foundational research</p>
+                    <h2>Research Programs</h2>
+                    <p>Exploring the theoretical underpinnings of machine cognition, geometric computation, and organizational principles.</p>
+                </div>
+                <div class="platform-grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--space-8);">
+                    <!-- PPP -->
+                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://domusgpt.github.io/ppp-info-site/" target="_blank" rel="noopener" data-animate="reveal">
+                        <div class="lab-header">
+                            <span class="lab-label">Research Program</span>
+                            <span class="lab-metric">Active</span>
+                        </div>
+                        <h3 style="font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: var(--font-size-2xl); color: var(--theme-primary-light); margin: var(--space-4) 0;">Polytopal Projection Processing<br/>& Geometric Computation</h3>
+                        <p class="lab-description">Advanced mathematical frameworks for higher-dimensional geometric processing, polytope projection mathematics, and holographic visualization systems.</p>
+                        <ul class="lab-list">
+                            <li>4D+ geometric processing algorithms</li>
+                            <li>Polytopal projection mathematics</li>
+                            <li>Holographic visualization frameworks</li>
+                            <li>Multi-dimensional rendering systems</li>
+                        </ul>
+                        <span class="platform-link" style="margin-top: var(--space-4); display: block;">Explore PPP research →</span>
+                    </a>
+
+                    <!-- EPO -->
+                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://entropic-principles.web.app/" target="_blank" rel="noopener" data-animate="reveal" style="--reveal-delay: 0.15s;">
+                        <div class="lab-header">
+                            <span class="lab-label">Research Program</span>
+                            <span class="lab-metric">Active</span>
+                        </div>
+                        <h3 style="font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: var(--font-size-2xl); color: var(--theme-secondary-light); margin: var(--space-4) 0;">EPO<br/>Entropic Principals of Organization</h3>
+                        <p class="lab-description">Philosophical and mathematical investigation into entropy, information theory, and organizational dynamics for ethical AI and cognitive systems.</p>
+                        <ul class="lab-list">
+                            <li>Information-theoretic AI foundations</li>
+                            <li>Entropy in machine learning systems</li>
+                            <li>Organizational complexity theory</li>
+                            <li>Ethical AI frameworks</li>
+                        </ul>
+                        <span class="platform-link" style="margin-top: var(--space-4); display: block;">Explore EPO research →</span>
+                    </a>
+                </div>
             </div>
         </section>
 
         <!-- Engagement Section -->
-        <section id="engagement" class="section engagement">
+        <section id="engagement" class="section engagement" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(192,132,252,0.09),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent"></div>
+
             <div class="container">
                 <div class="section-heading" data-animate="reveal">
                     <p class="eyebrow">Engagement arc</p>
@@ -318,7 +356,10 @@
         </section>
 
         <!-- Legacy Section -->
-        <section id="legacy" class="section legacy">
+        <section id="legacy" class="section legacy" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(56,189,248,0.08),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-secondary to-transparent"></div>
+
             <div class="container legacy-grid">
                 <div class="legacy-text" data-animate="reveal">
                     <p class="eyebrow">Domain intelligence (select)</p>
@@ -338,7 +379,10 @@
         </section>
 
         <!-- Contact Section -->
-        <section id="contact" class="section contact">
+        <section id="contact" class="section contact" style="border-top: 1px solid rgba(255, 255, 255, 0.08);">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,212,255,0.10),_transparent_70%)]"></div>
+            <div class="pointer-events-none absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent"></div>
+
             <div class="container contact-grid">
                 <div class="contact-text" data-animate="reveal">
                     <p class="eyebrow">Let's talk</p>
@@ -362,7 +406,6 @@
                 <span>Clear Seas Solutions</span>
             </div>
             <p class="footer-copy">© <span id="current-year"></span> Clear Seas Solutions. Precision AI architecture for visionary enterprises.</p>
-            <p class="footer-signature">🌟 A Paul Phillips Manifestation</p>
         </div>
     </footer>
 
