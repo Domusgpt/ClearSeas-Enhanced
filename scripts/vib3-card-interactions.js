@@ -7,59 +7,84 @@
 (function() {
   'use strict';
 
-  // VIB3+ Engine Container (created once, reused for all cards)
-  let vib3Container = null;
-  let vib3Frame = null;
+  // Card level registry so every tile owns its own overlay
+  const cardRegistry = new Map();
+  const preparedCards = new WeakSet();
   let activeCard = null;
   let rafId = null;
+  let motionEnabled = true;
 
   // Configuration
   const CONFIG = {
     tiltStrength: 15,        // Max tilt degrees
     floatDistance: 25,       // Max float distance in px
     glowIntensity: 40,       // Glow blur in px
-    vib3Opacity: 0.25,       // VIB3+ engine opacity
+    vib3Opacity: 0.35,       // VIB3+ engine opacity
     transitionSpeed: 200,    // Transition duration in ms
-    vib3Scale: 0.4,          // Scale of VIB3+ iframe
+    vib3Scale: 0.48,         // Scale of VIB3+ iframe
+    overlayParallax: 22,     // Max px overlay translation for parallax
+    frameSize: 1400,         // Size of the iframe viewport for cropping
+    frameFocusOffsetX: 50,   // Percentage offset to center VIB3+ focal point
+    frameFocusOffsetY: 54,   // Percentage offset to center VIB3+ focal point
   };
 
   /**
-   * Initialize VIB3+ container (hidden by default)
+   * Create / cache a VIB3+ overlay inside the provided card
    */
-  function initVib3Container() {
-    if (vib3Container) return;
+  function ensureCardOverlay(card) {
+    let overlay = cardRegistry.get(card);
 
-    vib3Container = document.createElement('div');
-    vib3Container.className = 'vib3-dynamic-viz';
-    vib3Container.style.cssText = `
-      position: fixed;
+    if (overlay) {
+      return overlay;
+    }
+
+    const computedStyle = window.getComputedStyle(card);
+    const cardPosition = computedStyle.position;
+
+    if (cardPosition === 'static') {
+      card.style.position = 'relative';
+    }
+
+    const container = document.createElement('div');
+    container.className = 'vib3-dynamic-viz';
+    container.style.cssText = `
+      position: absolute;
+      inset: 0;
       pointer-events: none;
-      width: 400px;
-      height: 400px;
+      overflow: hidden;
+      border-radius: ${computedStyle.borderRadius || '24px'};
       opacity: 0;
-      transition: opacity 0.4s ease-out;
-      z-index: 5;
-      filter: blur(1px);
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
       mix-blend-mode: screen;
+      filter: blur(0.4px);
+      z-index: 0;
     `;
 
-    // Create iframe with randomized URL parameters
-    const randomGeometry = ['tesseract', '24-cell', '600-cell', '120-cell'][Math.floor(Math.random() * 4)];
-    const randomHue = Math.floor(Math.random() * 360);
-
-    vib3Frame = document.createElement('iframe');
-    vib3Frame.src = `https://domusgpt.github.io/vib3-plus-engine/?geo=${randomGeometry}&hue=${randomHue}&auto=1`;
-    vib3Frame.style.cssText = `
-      width: 1000px;
-      height: 1000px;
-      transform: scale(${CONFIG.vib3Scale}) translate(-50%, -50%);
-      transform-origin: top left;
+    const frame = document.createElement('iframe');
+    frame.src = '';
+    frame.setAttribute('tabindex', '-1');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.setAttribute('loading', 'lazy');
+    frame.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: ${CONFIG.frameSize}px;
+      height: ${CONFIG.frameSize}px;
+      transform: translate(-${CONFIG.frameFocusOffsetX}%, -${CONFIG.frameFocusOffsetY}%) scale(${CONFIG.vib3Scale});
+      transform-origin: 50% 50%;
       border: none;
       background: transparent;
+      pointer-events: none;
     `;
 
-    vib3Container.appendChild(vib3Frame);
-    document.body.appendChild(vib3Container);
+    container.appendChild(frame);
+    card.insertBefore(container, card.firstChild);
+
+    overlay = { container, frame };
+    cardRegistry.set(card, overlay);
+
+    return overlay;
   }
 
   /**
@@ -115,46 +140,49 @@
    * Position VIB3+ visualization behind card
    */
   function positionVib3Visual(card, tilt) {
-    if (!vib3Container) return;
+    const overlay = cardRegistry.get(card);
 
-    const rect = card.getBoundingClientRect();
-    const { tiltX, tiltY } = tilt;
+    if (!overlay) return;
 
-    // Position behind card center
-    const left = rect.left + (rect.width / 2) - 200;
-    const top = rect.top + (rect.height / 2) - 200;
+    const { tiltX, tiltY, deltaX, deltaY, centerX, centerY } = tilt;
+    const { container, frame } = overlay;
 
-    vib3Container.style.left = `${left}px`;
-    vib3Container.style.top = `${top}px`;
+    const parallaxX = (deltaX / centerX) * CONFIG.overlayParallax;
+    const parallaxY = (deltaY / centerY) * CONFIG.overlayParallax;
 
-    // Make VIB3+ visual respond to card tilt
-    vib3Frame.style.transform = `
+    container.style.transform = `translate3d(${parallaxX}px, ${parallaxY}px, 0)`;
+
+    frame.style.transform = `
+      translate(-${CONFIG.frameFocusOffsetX}%, -${CONFIG.frameFocusOffsetY}%)
       scale(${CONFIG.vib3Scale})
-      translate(-50%, -50%)
-      rotateX(${-tiltX * 0.5}deg)
-      rotateY(${-tiltY * 0.5}deg)
+      rotateX(${-tiltX * 0.4}deg)
+      rotateY(${tiltY * 0.4}deg)
     `;
 
-    vib3Container.style.opacity = CONFIG.vib3Opacity;
+    container.style.opacity = CONFIG.vib3Opacity;
   }
 
   /**
    * Handle card mouse enter
    */
   function handleCardEnter(card) {
-    initVib3Container();
+    if (!motionEnabled) return;
 
     activeCard = card;
     card.style.transition = `transform ${CONFIG.transitionSpeed}ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow ${CONFIG.transitionSpeed}ms ease`;
     card.style.transformStyle = 'preserve-3d';
     card.style.willChange = 'transform';
 
+    const overlay = ensureCardOverlay(card);
+
     // Randomize VIB3+ engine on each hover
     const randomGeometry = ['tesseract', '24-cell', '600-cell', '120-cell', '16-cell', '5-cell'][Math.floor(Math.random() * 6)];
     const randomHue = Math.floor(Math.random() * 360);
     const randomIntensity = 0.6 + (Math.random() * 0.4);
 
-    vib3Frame.src = `https://domusgpt.github.io/vib3-plus-engine/?geo=${randomGeometry}&hue=${randomHue}&intensity=${randomIntensity}&auto=1&shimmer=1`;
+    overlay.frame.src = `https://domusgpt.github.io/vib3-plus-engine/?geo=${randomGeometry}&hue=${randomHue}&intensity=${randomIntensity}&auto=1&shimmer=1`;
+    overlay.container.style.opacity = CONFIG.vib3Opacity;
+    overlay.container.style.transform = 'translate3d(0, 0, 0)';
   }
 
   /**
@@ -191,8 +219,15 @@
     card.style.boxShadow = '';
     card.style.willChange = 'auto';
 
-    if (vib3Container) {
-      vib3Container.style.opacity = '0';
+    const overlay = cardRegistry.get(card);
+
+    if (overlay) {
+      overlay.container.style.opacity = '0';
+      overlay.container.style.transform = 'translate3d(0, 0, 0)';
+      overlay.frame.style.transform = `
+        translate(-${CONFIG.frameFocusOffsetX}%, -${CONFIG.frameFocusOffsetY}%)
+        scale(${CONFIG.vib3Scale})
+      `;
     }
   }
 
@@ -213,11 +248,19 @@
       const cards = document.querySelectorAll(selector);
 
       cards.forEach(card => {
+        if (!cardRegistry.has(card)) {
+          ensureCardOverlay(card);
+        }
+
+        if (preparedCards.has(card)) return;
+
         card.addEventListener('mouseenter', () => handleCardEnter(card));
 
         card.addEventListener('mousemove', (e) => handleCardMove(card, e));
 
         card.addEventListener('mouseleave', () => handleCardLeave(card));
+
+        preparedCards.add(card);
       });
     });
   }
@@ -239,18 +282,38 @@
   const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   if (!reduceMotionQuery.matches) {
+    motionEnabled = true;
     init();
+  } else {
+    motionEnabled = false;
+  }
+
+  function teardownOverlays() {
+    cardRegistry.forEach(({ container }) => {
+      if (container.parentElement) {
+        container.parentElement.removeChild(container);
+      }
+    });
+    cardRegistry.clear();
   }
 
   // Listen for changes in motion preference
   reduceMotionQuery.addEventListener('change', (e) => {
-    if (e.matches && vib3Container) {
-      vib3Container.remove();
-      vib3Container = null;
-      vib3Frame = null;
-    } else if (!e.matches) {
+    motionEnabled = !e.matches;
+
+    if (motionEnabled) {
       init();
+      return;
     }
+
+    activeCard = null;
+
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    teardownOverlays();
   });
 
 })();
