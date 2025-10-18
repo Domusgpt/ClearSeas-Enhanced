@@ -1,8 +1,26 @@
 /*
  * Clear Seas Solutions — Enhanced with Visual Codex Integration
  * Combining polytopal field aesthetics with VIB34D holographic effects
- * A Paul Phillips Manifestation
+ * Interactive VIB3+ Card System
+ * © 2025 Clear Seas Solutions
  */
+
+/* ===== VIB3+ DYNAMIC VISUALIZATION CONTAINER ===== */
+.vib3-dynamic-viz {
+  position: fixed;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+/* ===== ENHANCED CARD BASE STYLES FOR 3D TRANSFORMS ===== */
+.vcodex-neoskeu-card {
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 0.2s ease,
+              border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
 
 /* ===== ENHANCED SIGNAL CARDS WITH MELLOW NEOSKEU STYLING ===== */
 .signal-card.vcodex-neoskeu-card {
