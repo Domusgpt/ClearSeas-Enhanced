@@ -544,41 +544,7 @@
     // ============================================
 
     choreographHero(cards, progress, velocity) {
-      cards.forEach((card, i) => {
-        const data = this.enhancer.visualizers.get(card);
-        if (!data) return;
-
-        const canvas = data.canvas;
-        const viz = data.visualizer;
-
-        // PARALLAX LAYERS - different speeds
-        const cardSpeed = 1.0;
-        const vizSpeed = 0.6; // Visualizers move slower (background effect)
-
-        // Card parallax
-        const cardY = progress * 50 * cardSpeed;
-        const cardScale = 1 + progress * 0.1;
-
-        card.style.transform = `translateY(${-cardY}px) scale(${cardScale})`;
-        card.style.opacity = `${1 - progress * 0.3}`;
-
-        // Visualizer parallax (slower)
-        const vizY = progress * 80 * vizSpeed;
-        canvas.style.transform = `translateY(${-vizY}px) scale(${1 + progress * 0.2})`;
-        canvas.style.opacity = `${Math.sin(progress * Math.PI) * 0.8}`;
-
-        // Progressive parameter changes
-        viz.params.gridDensity.value = 15 - progress * 7;
-        viz.params.morphFactor.value = 1.0 + progress * 1.2;
-        viz.params.rot4dXW.value = progress * Math.PI * 2;
-        viz.params.rot4dYW.value = progress * Math.PI * 1.5;
-        viz.params.speed.value = 1.0 + progress * 2.0;
-
-        // Geometry changes based on progress threshold
-        if (progress > 0.5 && viz.geometry < 8) {
-          viz.geometry = (viz.geometry + 8) % 24;
-        }
-      });
+      // This section is now controlled by GSAP in gsap-animations.js
     }
 
     choreographCapabilities(cards, progress, velocity) {
