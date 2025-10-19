@@ -7,9 +7,108 @@
 
 /* ===== VIB3+ DYNAMIC VISUALIZATION CONTAINER ===== */
 .vib3-dynamic-viz {
-  position: fixed;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
-  will-change: opacity, transform;
+  will-change: clip-path, opacity, transform;
+  clip-path: inset(0 100% 0 0);
+  isolation: isolate;
+}
+
+.vib3-dynamic-viz::before {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  background: linear-gradient(135deg, var(--vib3-variant-accent, rgba(0, 212, 255, 0.5)) 0%, transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transform: var(--vib3-sweep-transform, scale(1.05));
+  filter: blur(18px) saturate(130%);
+  transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vib3-dynamic-viz::after {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(circle, var(--vib3-variant-accent, rgba(0, 212, 255, 0.35)) 0%, transparent 68%);
+  opacity: 0.75;
+  filter: blur(26px) saturate(118%);
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="primed"]::after,
+.vib3-dynamic-viz[data-vib3-sweep-state="occluded"]::after {
+  opacity: 0.55;
+  transform: scale(0.94);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="revealed"]::after {
+  opacity: 0.9;
+  transform: scale(1.08);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="revealing"]::after,
+.vib3-dynamic-viz[data-vib3-sweep-state="occluding"]::after {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+.vib3-dynamic-viz[data-vib3-node="quantum"]::after {
+  filter: blur(24px) saturate(128%);
+}
+
+.vib3-dynamic-viz[data-vib3-node="holographic"]::after {
+  filter: blur(32px) saturate(140%);
+  opacity: 0.82;
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="fromLeft"] {
+  --vib3-sweep-transform: scale(1.04) rotate(-10deg);
+  --vib3-sweep-transform-active: scale(1.16) rotate(-6deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="fromRight"] {
+  --vib3-sweep-transform: scale(1.04) rotate(10deg);
+  --vib3-sweep-transform-active: scale(1.16) rotate(6deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="fromTop"] {
+  --vib3-sweep-transform: scale(1.05) rotate(90deg);
+  --vib3-sweep-transform-active: scale(1.18) rotate(90deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="fromBottom"] {
+  --vib3-sweep-transform: scale(1.05) rotate(-90deg);
+  --vib3-sweep-transform-active: scale(1.18) rotate(-90deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="diagLtr"] {
+  --vib3-sweep-transform: scale(1.1) rotate(-42deg);
+  --vib3-sweep-transform-active: scale(1.22) rotate(-30deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep="diagRtl"] {
+  --vib3-sweep-transform: scale(1.1) rotate(42deg);
+  --vib3-sweep-transform-active: scale(1.22) rotate(30deg);
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="revealing"]::before,
+.vib3-dynamic-viz[data-vib3-sweep-state="occluding"]::before {
+  opacity: 0.92;
+  transform: var(--vib3-sweep-transform-active, scale(1.16));
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="revealed"]::before {
+  opacity: 0.35;
+  transform: var(--vib3-sweep-transform-active, scale(1.16));
+}
+
+.vib3-dynamic-viz[data-vib3-sweep-state="primed"]::before {
+  opacity: 0;
+  transform: var(--vib3-sweep-transform, scale(1.05));
 }
 
 /* ===== ENHANCED CARD BASE STYLES FOR 3D TRANSFORMS ===== */
