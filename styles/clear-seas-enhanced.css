@@ -7,9 +7,26 @@
 
 /* ===== VIB3+ DYNAMIC VISUALIZATION CONTAINER ===== */
 .vib3-dynamic-viz {
-  position: fixed;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
   will-change: opacity, transform;
+}
+
+.vib3-dynamic-viz::after {
+  content: '';
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(circle, var(--vib3-variant-accent, rgba(0, 212, 255, 0.35)) 0%, transparent 68%);
+  opacity: 0.75;
+  filter: blur(28px) saturate(120%);
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.vcodex-neoskeu-card:hover .vib3-dynamic-viz::after {
+  opacity: 0.95;
+  transform: scale(1.08);
 }
 
 /* ===== ENHANCED CARD BASE STYLES FOR 3D TRANSFORMS ===== */
