@@ -514,13 +514,16 @@
     animateSection(section, progress, velocity) {
       // Get all cards in this section
       const cards = Array.from(section.element.querySelectorAll(
-        '.signal-card, .capability-card, .platform-card, .research-lab, .step'
+        '.signal-card, .capability-card, .platform-card, .research-lab, .scroll-morph-card, .step'
       ));
 
       // Section-specific choreography
       switch(section.id) {
         case 'hero':
           this.choreographHero(cards, progress, velocity);
+          break;
+        case 'immersive':
+          this.choreographImmersive(cards, progress, velocity);
           break;
         case 'capabilities':
           this.choreographCapabilities(cards, progress, velocity);
@@ -578,6 +581,37 @@
         if (progress > 0.5 && viz.geometry < 8) {
           viz.geometry = (viz.geometry + 8) % 24;
         }
+      });
+    }
+
+    choreographImmersive(cards, progress, velocity) {
+      cards.forEach((card) => {
+        const data = this.enhancer.visualizers.get(card);
+        if (!data) return;
+
+        const canvas = data.canvas;
+        const viz = data.visualizer;
+
+        const float = Math.sin(progress * Math.PI * 2) * 25;
+        const sway = Math.cos(progress * Math.PI) * 14;
+        const depthScale = 1 + progress * 0.14;
+
+        card.style.transform = `translate3d(${sway}px, ${-float}px, 0) scale(${depthScale})`;
+
+        const baseOpacity = 0.45 + progress * 0.4 + Math.min(0.25, Math.abs(velocity) * 0.25);
+        canvas.style.opacity = `${Math.min(0.95, baseOpacity)}`;
+        canvas.style.filter = `blur(${(1.2 - Math.min(1, progress)) * 10 + 4}px) saturate(${130 + progress * 90}%)`;
+        canvas.style.transform = `scale(${1.1 + progress * 0.25})`;
+
+        viz.params.gridDensity.value = 18 - progress * 9;
+        viz.params.morphFactor.value = 1.4 + progress * 1.4;
+        viz.params.chaos.value = 0.22 + progress * 0.4 + Math.min(0.35, Math.abs(velocity) * 0.6);
+        viz.params.intensity.value = 0.5 + progress * 0.35;
+        viz.params.speed.value = 1.0 + progress * 1.25 + Math.min(0.6, Math.abs(velocity) * 0.5);
+        viz.params.rot4dXW.value = progress * Math.PI * 1.1;
+        viz.params.rot4dYW.value = progress * Math.PI * 1.7 + velocity * 0.4;
+        viz.params.rot4dZW.value = progress * Math.PI * 0.9;
+        viz.params.hue.value = (viz.params.hue.value + progress * 8 + velocity * 12) % 360;
       });
     }
 
@@ -715,6 +749,7 @@
         '.capability-card',
         '.platform-card',
         '.research-lab',
+        '.scroll-morph-card',
         '.step'
       ];
 
@@ -759,41 +794,53 @@
         card.style.position = 'relative';
       }
 
-      card.style.overflow = 'hidden';
+      const allowBleed = card.dataset.allowBleed === 'true';
+
+      card.style.overflow = allowBleed ? 'visible' : 'hidden';
       card.style.willChange = 'transform, opacity';
       card.insertBefore(canvas, card.firstChild);
+
+      if (allowBleed) {
+        canvas.style.transition = 'opacity 0.6s ease, filter 0.8s ease, transform 0.8s ease';
+        canvas.style.opacity = '0.55';
+        canvas.style.transform = 'scale(1.12)';
+        canvas.style.filter = 'blur(14px) saturate(140%)';
+      }
 
       const mode = index % 2 === 0 ? 'quantum' : 'holographic';
       const visualizer = new CardPolytopeVisualizer(canvas, mode);
       visualizer.resize();
 
-      this.visualizers.set(card, { canvas, visualizer, isVisible: false });
+      this.visualizers.set(card, { canvas, visualizer, isVisible: allowBleed });
 
-      // Hover events
-      card.addEventListener('mouseenter', () => {
-        const data = this.visualizers.get(card);
-        if (data) {
-          canvas.style.opacity = '0.8';
-          data.isVisible = true;
-        }
-      });
+      if (!allowBleed) {
+        // Hover events only for contained cards
+        card.addEventListener('mouseenter', () => {
+          const data = this.visualizers.get(card);
+          if (data) {
+            canvas.style.opacity = '0.8';
+            data.isVisible = true;
+          }
+        });
 
-      card.addEventListener('mouseleave', () => {
-        const data = this.visualizers.get(card);
-        if (data) {
-          canvas.style.opacity = '0';
-          data.isVisible = false;
-        }
-      });
+        card.addEventListener('mouseleave', () => {
+          const data = this.visualizers.get(card);
+          if (data) {
+            canvas.style.opacity = '0';
+            data.isVisible = false;
+          }
+        });
+      }
 
       card.addEventListener('mousemove', (e) => {
         const data = this.visualizers.get(card);
-        if (data && data.isVisible) {
-          const rect = card.getBoundingClientRect();
-          const x = (e.clientX - rect.left) / rect.width;
-          const y = (e.clientY - rect.top) / rect.height;
-          data.visualizer.setMousePosition(x, y);
-        }
+        if (!data) return;
+        if (!allowBleed && !data.isVisible) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        data.visualizer.setMousePosition(x, y);
       });
     }
 
