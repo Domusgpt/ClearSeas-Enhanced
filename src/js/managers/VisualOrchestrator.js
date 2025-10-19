@@ -21,7 +21,8 @@ export class VisualOrchestrator {
             timeOfDay: this.getTimeOfDay(),
             userEnergy: 0.5, // How active the user is
             sessionTime: 0,
-            dominantColor: { h: 180, s: 0.8, v: 0.9 }
+            dominantColor: { h: 180, s: 0.8, v: 0.9 },
+            morphState: { state: 'orb', progress: 0, metadata: {} }
         };
         
         // Visual targets (what we're transitioning toward)
@@ -50,6 +51,17 @@ export class VisualOrchestrator {
                 hue: 180,
                 rgbOffset: 0.002,
                 moireIntensity: 0.1,
+                formMix: 1.0
+            },
+            immersive: {
+                preset: 'nebula',
+                form: 'amoeba',            // Fluid morphing organic structures
+                intensity: 0.65,
+                chaos: 0.22,
+                speed: 0.55,
+                hue: 190,
+                rgbOffset: 0.004,
+                moireIntensity: 0.18,
                 formMix: 1.0
             },
             signals: {
@@ -108,7 +120,14 @@ export class VisualOrchestrator {
                 formMix: 1.0
             }
         };
-        
+
+        this.morphProfiles = {
+            orb: { hue: 188, chaos: 0.18, intensity: 0.6, speed: 0.52, moire: 0.14, rgbOffset: 0.004 },
+            bloom: { hue: 208, chaos: 0.35, intensity: 0.78, speed: 0.78, moire: 0.3, rgbOffset: 0.007 },
+            column: { hue: 164, chaos: 0.24, intensity: 0.68, speed: 0.6, moire: 0.2, rgbOffset: 0.005 },
+            panel: { hue: 198, chaos: 0.3, intensity: 0.75, speed: 0.66, moire: 0.26, rgbOffset: 0.006 }
+        };
+
         // Interaction multipliers
         this.multipliers = {
             mouseActivity: 1.0,
@@ -189,7 +208,12 @@ export class VisualOrchestrator {
         
         // Section observation
         this.observeSections();
-        
+
+        window.addEventListener('immersiveMorphState', (event) => {
+            const detail = event.detail || {};
+            this.handleMorphState(detail.state, detail.progress, detail.metadata);
+        });
+
         // Time of day updates
         setInterval(() => {
             this.state.timeOfDay = this.getTimeOfDay();
@@ -216,18 +240,29 @@ export class VisualOrchestrator {
     transitionToSection(sectionId) {
         console.log(`🎬 Transitioning to section: ${sectionId}`);
         this.state.currentSection = sectionId;
-        
+
         const profile = this.sectionProfiles[sectionId] || this.sectionProfiles.hero;
-        
+
         // Set new visual target
         Object.assign(this.visualTarget, profile);
-        
+
         // Dispatch event for other systems
         window.dispatchEvent(new CustomEvent('sectionTransition', {
             detail: { section: sectionId, profile }
         }));
     }
-    
+
+    handleMorphState(state = 'orb', progress = 0, metadata = {}) {
+        const normalizedProgress = Math.max(0, Math.min(1, typeof progress === 'number' ? progress : 0));
+        const sanitizedState = this.morphProfiles[state] ? state : 'orb';
+
+        this.state.morphState = {
+            state: sanitizedState,
+            progress: normalizedProgress,
+            metadata: metadata || {}
+        };
+    }
+
     onCardHover(card, isEntering) {
         if (isEntering) {
             // Card is being hovered - increase effects
@@ -355,7 +390,28 @@ export class VisualOrchestrator {
         // Hue shifts slightly based on mouse position
         const hueShift = (this.state.mousePos.x - 0.5) * 40;
         this.visualTarget.hue = (profile.hue + hueShift + 360) % 360;
-        
+
+        if (this.state.currentSection === 'immersive') {
+            const morphState = this.state.morphState || {};
+            const morphProfile = this.morphProfiles[morphState.state] || this.morphProfiles.orb;
+            const progress = morphState.progress || 0;
+            const metadata = morphState.metadata || {};
+
+            const intensityTarget = Number.isFinite(metadata.intensity) ? metadata.intensity : morphProfile.intensity;
+            const chaosTarget = Number.isFinite(metadata.chaos) ? metadata.chaos : morphProfile.chaos;
+            const speedTarget = morphProfile.speed + progress * 0.25;
+            const moireTarget = morphProfile.moire + progress * 0.3;
+            const rgbOffsetTarget = morphProfile.rgbOffset + (metadata.velocity ? Math.min(0.006, Math.abs(metadata.velocity) * 0.004) : 0);
+            const hueTarget = morphProfile.hue;
+
+            this.visualTarget.intensity = this.lerp(this.visualTarget.intensity, intensityTarget, 0.35 + progress * 0.35);
+            this.visualTarget.chaos = this.lerp(this.visualTarget.chaos, chaosTarget, 0.45);
+            this.visualTarget.speed = this.lerp(this.visualTarget.speed, speedTarget, 0.4);
+            this.visualTarget.moireIntensity = this.lerp(this.visualTarget.moireIntensity, moireTarget, 0.4);
+            this.visualTarget.rgbOffset = this.lerp(this.visualTarget.rgbOffset, rgbOffsetTarget, 0.5);
+            this.visualTarget.hue = this.lerpHue(this.visualTarget.hue, hueTarget, 0.3 + progress * 0.4);
+        }
+
         // Clamp all values
         this.visualTarget.intensity = Math.min(1.0, this.visualTarget.intensity);
         this.visualTarget.chaos = Math.min(1.0, this.visualTarget.chaos);
@@ -392,7 +448,18 @@ export class VisualOrchestrator {
             }
         }));
     }
-    
+
+    lerp(start, end, t) {
+        const amount = Math.max(0, Math.min(1, t));
+        return start + (end - start) * amount;
+    }
+
+    lerpHue(current, target, t) {
+        const amount = Math.max(0, Math.min(1, t));
+        const delta = ((target - current + 540) % 360) - 180;
+        return current + delta * amount;
+    }
+
     getTimeOfDay() {
         const hour = new Date().getHours();
         if (hour >= 5 && hour < 12) return 'morning';
