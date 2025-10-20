@@ -3,9 +3,37 @@
  * Avant-garde yet professional interface layering for AI & machine cognition consulting
  */
 
+:root {
+  --hero-mask-progress: 0;
+  --hero-card-depth-scale: 1;
+  --hero-parallax-y: 0px;
+  --moire-shift: 0px;
+  --moire-rotation: 0deg;
+  --moire-scale: 1;
+  --moire-opacity: 0.35;
+}
+
 body {
   position: relative;
   min-height: 100vh;
+}
+
+body.scroll-choreography-active {
+  scroll-behavior: auto;
+}
+
+body.scroll-choreo-reduced .hero {
+  position: relative;
+  min-height: auto;
+}
+
+body.scroll-choreo-reduced {
+  --hero-mask-progress: 1;
+  --hero-parallax-y: 0px;
+  --moire-shift: 0px;
+  --moire-rotation: 0deg;
+  --moire-scale: 1;
+  --moire-opacity: 0.18;
 }
 
 #polytopal-field {
@@ -17,6 +45,116 @@ body {
   pointer-events: none;
   z-index: -3;
   opacity: 0.85;
+}
+
+.moire-layer {
+  position: fixed;
+  inset: -8% -12%;
+  pointer-events: none;
+  z-index: -1;
+  display: grid;
+  place-items: center;
+  mix-blend-mode: screen;
+  opacity: var(--moire-opacity);
+  transform: translateY(calc(var(--hero-parallax-y) * -0.08)) scale(var(--moire-scale))
+    rotate(var(--moire-rotation));
+  transition: opacity 0.6s var(--ease-in-out);
+}
+
+.scroll-choreo-reduced .moire-layer {
+  mix-blend-mode: lighten;
+}
+
+.moire-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(16, 24, 38, 0.35), transparent 70%);
+  filter: blur(120px);
+  opacity: 0.75;
+}
+
+.moire-channel {
+  position: relative;
+  width: min(1200px, 90vw);
+  height: min(1200px, 90vh);
+  border-radius: clamp(280px, calc(520px * (1 - var(--hero-mask-progress) * 0.3)), 640px);
+  background-size: 180px 180px;
+  background-position: center;
+  background-blend-mode: screen;
+  filter: blur(0.2px);
+  transform: translateY(var(--hero-parallax-y));
+  opacity: 0.55;
+}
+
+.moire-channel::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  mix-blend-mode: overlay;
+}
+
+.moire-channel-r {
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 64, 110, 0.35) 0px,
+      rgba(255, 64, 110, 0.35) 24px,
+      transparent 24px,
+      transparent 48px
+    ),
+    repeating-linear-gradient(
+      -135deg,
+      rgba(255, 64, 110, 0.12) 0px,
+      rgba(255, 64, 110, 0.12) 16px,
+      transparent 16px,
+      transparent 32px
+    );
+  transform: translateX(calc(var(--moire-shift) * -0.5)) translateY(calc(var(--hero-parallax-y) * -0.08)) rotate(-1deg);
+}
+
+.moire-channel-g {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(0, 214, 255, 0.32) 0px,
+      rgba(0, 214, 255, 0.32) 20px,
+      transparent 20px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(0, 214, 255, 0.18) 0px,
+      rgba(0, 214, 255, 0.18) 32px,
+      transparent 32px,
+      transparent 64px
+    );
+  transform: translateX(calc(var(--moire-shift) * 0.4)) translateY(calc(var(--hero-parallax-y) * -0.05)) rotate(0.5deg);
+}
+
+.moire-channel-b {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(120, 92, 255, 0.28) 0px,
+      rgba(120, 92, 255, 0.28) 18px,
+      transparent 18px,
+      transparent 36px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(120, 92, 255, 0.18) 0px,
+      rgba(120, 92, 255, 0.18) 30px,
+      transparent 30px,
+      transparent 60px
+    );
+  transform: translateX(calc(var(--moire-shift) * 0.8)) translateY(calc(var(--hero-parallax-y) * -0.12)) rotate(1.35deg);
+}
+
+.moire-channel:not(:first-child) {
+  mix-blend-mode: lighten;
 }
 
 .texture-layer {
@@ -206,6 +344,12 @@ body {
 .hero {
   position: relative;
   padding: var(--space-32) 0 var(--space-24);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  isolation: isolate;
+  overflow: visible;
+  --hero-mask-radius: clamp(18px, calc(240px * (1 - var(--hero-mask-progress))), 320px);
 }
 
 .hero::before {
@@ -218,11 +362,31 @@ body {
   z-index: -1;
 }
 
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: clamp(12px, calc(60px * var(--hero-mask-progress)), 120px);
+  border-radius: var(--hero-mask-radius);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(140deg, rgba(12, 16, 28, 0.72), rgba(26, 30, 44, 0.4));
+  mix-blend-mode: screen;
+  opacity: clamp(0.2, calc(0.7 - var(--hero-mask-progress) * 0.4), 0.6);
+  filter: blur(calc((1 - var(--hero-mask-progress)) * 6px));
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  z-index: -1;
+}
+
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   gap: var(--space-12);
   align-items: center;
+}
+
+.hero-text {
+  transform: translateY(calc(var(--hero-parallax-y) * -0.05));
+  transition: transform 0.35s var(--ease-out);
 }
 
 .hero h1 {
@@ -328,10 +492,28 @@ body {
   color: rgba(255, 255, 255, 0.7);
 }
 
+[data-scroll-scene] {
+  position: relative;
+}
+
+.scroll-scene-fade-in {
+  opacity: 0;
+  transform: translateY(60px);
+}
+
+.scroll-choreo-reduced [data-scroll-scene] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 .hero-panels {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 1400px;
+  transform: translateY(calc(var(--hero-parallax-y) * 0.12));
 }
 
 .signal-card {
@@ -341,8 +523,11 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(165deg, rgba(12, 16, 26, 0.92), rgba(24, 28, 38, 0.65));
   backdrop-filter: blur(18px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 calc(18px * var(--card-depth, 1)) calc(40px * var(--card-depth, 1)) rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  will-change: transform, filter;
+  transform-origin: center;
+  transform: translate3d(0, 0, 0);
 }
 
 .signal-card::after {
@@ -835,6 +1020,7 @@ body {
 @media (max-width: 720px) {
   .hero {
     padding: var(--space-24) 0 var(--space-20);
+    min-height: auto;
   }
 
   .hero-tags li {
