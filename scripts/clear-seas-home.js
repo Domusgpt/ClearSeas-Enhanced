@@ -189,7 +189,10 @@ function initPolytopalField(canvas) {
   let width = 0;
   let height = 0;
   let animationFrameId = null;
+  let visibilityHandler = null;
   let nodes = [];
+
+  let backdropGradient = null;
 
   const pointer = { x: 0, y: 0, active: false };
 
@@ -378,6 +381,11 @@ function initPolytopalField(canvas) {
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(deviceRatio, deviceRatio);
+
+    backdropGradient = ctx.createLinearGradient(0, 0, width, height);
+    backdropGradient.addColorStop(0, 'rgba(0, 212, 255, 0.07)');
+    backdropGradient.addColorStop(1, 'rgba(255, 0, 110, 0.05)');
+
     applyParameterState();
   };
 
@@ -416,54 +424,118 @@ function initPolytopalField(canvas) {
     });
   };
 
+  const neighborOffsets = [
+    { x: -1, y: -1 },
+    { x: 0, y: -1 },
+    { x: 1, y: -1 },
+    { x: -1, y: 0 },
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: -1, y: 1 },
+    { x: 0, y: 1 },
+    { x: 1, y: 1 }
+  ];
+
+  const spatialGrid = new Map();
+
   const drawConnections = () => {
     const maxDistance = settings.connectionDistance * (width < 768 ? 0.75 : 1);
+    const cellSize = Math.max(48, maxDistance * 0.85);
+    const invCellSize = 1 / cellSize;
     const morphFactor = clamp(parameterState.morphProgress, 0, 1);
 
-    const connectionColor = (alpha) => {
-      const r = Math.round(lerp(0, 255, morphFactor));
-      const g = Math.round(lerp(212, 32, morphFactor));
-      const b = Math.round(lerp(255, 180, morphFactor));
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    };
+    const baseColor = `rgb(${Math.round(lerp(0, 255, morphFactor))}, ${Math.round(lerp(212, 32, morphFactor))}, ${Math.round(
+      lerp(255, 180, morphFactor)
+    )})`;
+    const pointerColor = `rgb(${Math.round(lerp(255, 120, morphFactor))}, ${Math.round(lerp(0, 64, morphFactor))}, ${Math.round(
+      lerp(110, 220, morphFactor)
+    )})`;
 
-    for (let i = 0; i < nodes.length; i += 1) {
-      const nodeA = nodes[i];
+    spatialGrid.clear();
 
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const nodeB = nodes[j];
-        const dx = nodeA.x - nodeB.x;
-        const dy = nodeA.y - nodeB.y;
-        const distance = Math.hypot(dx, dy);
+    nodes.forEach((node, index) => {
+      const cellX = Math.floor(node.x * invCellSize);
+      const cellY = Math.floor(node.y * invCellSize);
+      let column = spatialGrid.get(cellX);
+      if (!column) {
+        column = new Map();
+        spatialGrid.set(cellX, column);
+      }
+      let bucket = column.get(cellY);
+      if (!bucket) {
+        bucket = [];
+        column.set(cellY, bucket);
+      }
+      bucket.push(index);
+    });
 
-        if (distance < maxDistance) {
+    const pointerThreshold = pointer.active ? maxDistance * 1.1 : 0;
+    const baseLineWidth = width < 768 ? 0.7 : 0.8;
+
+    ctx.save();
+    ctx.lineWidth = baseLineWidth;
+    let activeStroke = baseColor;
+    ctx.strokeStyle = activeStroke;
+
+    nodes.forEach((node, nodeIndex) => {
+      const cellX = Math.floor(node.x * invCellSize);
+      const cellY = Math.floor(node.y * invCellSize);
+
+      for (let n = 0; n < neighborOffsets.length; n += 1) {
+        const offset = neighborOffsets[n];
+        const neighborColumn = spatialGrid.get(cellX + offset.x);
+        if (!neighborColumn) continue;
+        const neighborBucket = neighborColumn.get(cellY + offset.y);
+        if (!neighborBucket) continue;
+
+        for (let b = 0; b < neighborBucket.length; b += 1) {
+          const neighborIndex = neighborBucket[b];
+          if (neighborIndex <= nodeIndex) continue;
+
+          const neighbor = nodes[neighborIndex];
+          const dx = node.x - neighbor.x;
+          const dy = node.y - neighbor.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance >= maxDistance) continue;
+
           const alpha = (1 - distance / maxDistance) * 0.45;
-          ctx.strokeStyle = connectionColor(alpha);
-          ctx.lineWidth = 0.8;
+          if (alpha <= 0) continue;
+
+          if (activeStroke !== baseColor) {
+            ctx.strokeStyle = baseColor;
+            activeStroke = baseColor;
+          }
+          ctx.globalAlpha = alpha;
           ctx.beginPath();
-          ctx.moveTo(nodeA.x, nodeA.y);
-          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.moveTo(node.x, node.y);
+          ctx.lineTo(neighbor.x, neighbor.y);
           ctx.stroke();
         }
       }
 
-      if (pointer.active) {
-        const dxPointer = nodeA.x - pointer.x;
-        const dyPointer = nodeA.y - pointer.y;
+      if (pointer.active && pointerThreshold > 0) {
+        const dxPointer = node.x - pointer.x;
+        const dyPointer = node.y - pointer.y;
         const pointerDistance = Math.hypot(dxPointer, dyPointer);
-        const pointerThreshold = maxDistance * 1.1;
-
         if (pointerDistance < pointerThreshold) {
-          const alpha = (1 - pointerDistance / pointerThreshold) * 0.6;
-          ctx.strokeStyle = `rgba(${Math.round(lerp(255, 120, morphFactor))}, ${Math.round(lerp(0, 64, morphFactor))}, ${Math.round(lerp(110, 220, morphFactor))}, ${alpha})`;
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.moveTo(nodeA.x, nodeA.y);
-          ctx.lineTo(pointer.x, pointer.y);
-          ctx.stroke();
+          const pointerAlpha = (1 - pointerDistance / pointerThreshold) * 0.6;
+          if (pointerAlpha > 0) {
+            if (activeStroke !== pointerColor) {
+              ctx.strokeStyle = pointerColor;
+              activeStroke = pointerColor;
+            }
+            ctx.globalAlpha = pointerAlpha;
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(pointer.x, pointer.y);
+            ctx.stroke();
+          }
         }
       }
-    }
+    });
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
   };
 
   const drawNodes = () => {
@@ -477,47 +549,43 @@ function initPolytopalField(canvas) {
       1.15
     );
     const chromaSpread = 12 + morphFactor * 36 + Math.max(0, 1 - stabilityFactor) * 22 + Math.max(0, parameterState.zoom) * 30;
+    const channelOpacity = 0.08 + chromaInfluence * 0.18;
+    const channelRadiusFactor = 2.6 + chromaInfluence * 1.4;
+    const channelColors = [
+      `rgba(255, 64, 110, ${channelOpacity})`,
+      `rgba(0, 214, 255, ${channelOpacity * 0.85})`,
+      `rgba(120, 92, 255, ${channelOpacity * 0.75})`
+    ];
+    const channelOffsets = [
+      { dx: -chromaSpread * 0.24, dy: -chromaSpread * 0.12 },
+      { dx: chromaSpread * 0.18, dy: chromaSpread * 0.14 },
+      { dx: chromaSpread * 0.32, dy: -chromaSpread * 0.2 }
+    ];
+    const baseInnerColor = `rgba(${Math.round(lerp(0, 255, morphFactor))}, ${Math.round(lerp(212, 64, morphFactor))}, ${Math.round(lerp(255, 210, morphFactor))}, ${innerAlpha})`;
 
     nodes.forEach((node) => {
       const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 8 * zoomScale);
-      const innerColor = `rgba(${Math.round(lerp(0, 255, morphFactor))}, ${Math.round(lerp(212, 64, morphFactor))}, ${Math.round(lerp(255, 210, morphFactor))}, ${innerAlpha})`;
-      gradient.addColorStop(0, innerColor);
+      gradient.addColorStop(0, baseInnerColor);
       gradient.addColorStop(1, 'rgba(0, 212, 255, 0)');
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(node.x, node.y, node.radius * 3 * zoomScale, 0, Math.PI * 2);
       ctx.fill();
+    });
 
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      const channelOpacity = 0.08 + chromaInfluence * 0.18;
-      const channelRadius = node.radius * (2.6 + chromaInfluence * 1.4);
-      const offsets = [
-        {
-          dx: -chromaSpread * 0.24,
-          dy: -chromaSpread * 0.12,
-          color: `rgba(255, 64, 110, ${channelOpacity})`
-        },
-        {
-          dx: chromaSpread * 0.18,
-          dy: chromaSpread * 0.14,
-          color: `rgba(0, 214, 255, ${channelOpacity * 0.85})`
-        },
-        {
-          dx: chromaSpread * 0.32,
-          dy: -chromaSpread * 0.2,
-          color: `rgba(120, 92, 255, ${channelOpacity * 0.75})`
-        }
-      ];
-
-      offsets.forEach((offset) => {
-        ctx.fillStyle = offset.color;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    nodes.forEach((node) => {
+      const channelRadius = node.radius * channelRadiusFactor;
+      for (let i = 0; i < channelOffsets.length; i += 1) {
+        const offset = channelOffsets[i];
+        ctx.fillStyle = channelColors[i];
         ctx.beginPath();
         ctx.arc(node.x + offset.dx, node.y + offset.dy, channelRadius, 0, Math.PI * 2);
         ctx.fill();
-      });
-      ctx.restore();
+      }
     });
+    ctx.restore();
 
     if (pointer.active) {
       const pointerGradient = ctx.createRadialGradient(pointer.x, pointer.y, 0, pointer.x, pointer.y, 120);
@@ -531,7 +599,7 @@ function initPolytopalField(canvas) {
     }
   };
 
-  const drawChromaticVeil = () => {
+  const drawChromaticVeil = (time) => {
     const morphFactor = clamp(parameterState.morphProgress, 0, 1);
     const stabilityFactor = clamp(parameterState.stability, 0.35, 1.4);
     const zoomFactor = clamp(parameterState.zoom, -0.3, 1.2);
@@ -542,7 +610,7 @@ function initPolytopalField(canvas) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = intensity;
 
-    const offset = (performance.now() / 45) % bandSpacing;
+    const offset = ((time || 0) / 45) % bandSpacing;
     for (let y = -bandSpacing; y < height + bandSpacing; y += bandSpacing) {
       ctx.fillStyle = 'rgba(255, 64, 110, 0.55)';
       ctx.fillRect(-bandSpacing, y + offset, width + bandSpacing * 2, 1.4);
@@ -557,25 +625,42 @@ function initPolytopalField(canvas) {
     ctx.restore();
   };
 
-  const renderFrame = () => {
+  const renderFrame = (time) => {
     ctx.clearRect(0, 0, width, height);
 
-    const backdropGradient = ctx.createLinearGradient(0, 0, width, height);
-    backdropGradient.addColorStop(0, 'rgba(0, 212, 255, 0.07)');
-    backdropGradient.addColorStop(1, 'rgba(255, 0, 110, 0.05)');
+    if (!backdropGradient) {
+      backdropGradient = ctx.createLinearGradient(0, 0, width, height);
+      backdropGradient.addColorStop(0, 'rgba(0, 212, 255, 0.07)');
+      backdropGradient.addColorStop(1, 'rgba(255, 0, 110, 0.05)');
+    }
     ctx.fillStyle = backdropGradient;
     ctx.fillRect(0, 0, width, height);
 
     updateNodes();
     drawConnections();
     drawNodes();
-    drawChromaticVeil();
+    drawChromaticVeil(time);
 
     animationFrameId = window.requestAnimationFrame(renderFrame);
   };
 
   const throttledResize = throttle(resizeCanvas, 250);
   window.addEventListener('resize', throttledResize, { passive: true });
+
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      if (animationFrameId) {
+        window.cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      pointer.active = false;
+    } else if (!animationFrameId) {
+      animationFrameId = window.requestAnimationFrame(renderFrame);
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  visibilityHandler = handleVisibilityChange;
 
   const handleMouseMove = (event) => {
     pointer.x = event.clientX;
@@ -610,6 +695,7 @@ function initPolytopalField(canvas) {
   const teardown = () => {
     if (animationFrameId) {
       window.cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
     }
 
     window.removeEventListener('resize', throttledResize);
@@ -617,8 +703,13 @@ function initPolytopalField(canvas) {
     window.removeEventListener('mouseleave', handleMouseLeave);
     window.removeEventListener('touchmove', handleTouchMove);
     window.removeEventListener('touchend', handleTouchEnd);
+    if (visibilityHandler) {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      visibilityHandler = null;
+    }
 
     stopParameterAnimation();
+    backdropGradient = null;
     ctx.clearRect(0, 0, width, height);
 
     dispatchPolytopalEvent('polytopal:teardown', { reason: 'teardown' });

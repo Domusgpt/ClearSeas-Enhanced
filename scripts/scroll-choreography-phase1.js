@@ -56,6 +56,7 @@
   let teardownHeroBridge = null;
   let heroBridge = null;
   let heroBridgeActive = false;
+  let stopLenis = null;
 
   const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   const handleReduceMotion = () => {
@@ -86,6 +87,10 @@
       bodyStyle.set('--texture-saturation', '1');
       bodyStyle.set('--texture-opacity', '0.7');
       delete body.dataset.heroPhase;
+      if (typeof stopLenis === 'function') {
+        stopLenis();
+        stopLenis = null;
+      }
       if (window.ScrollTrigger && typeof window.ScrollTrigger.getAll === 'function') {
         window.ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       }
@@ -134,6 +139,11 @@
 
     body.classList.add('scroll-choreography-active');
 
+    if (typeof stopLenis === 'function') {
+      stopLenis();
+      stopLenis = null;
+    }
+
     if (typeof detachPolytopalListener === 'function') {
       detachPolytopalListener();
       detachPolytopalListener = null;
@@ -154,11 +164,12 @@
         gestureOrientation: 'vertical'
       });
 
+      let lenisFrame = null;
       const updateScroll = (time) => {
         lenisInstance.raf(time);
-        requestAnimationFrame(updateScroll);
+        lenisFrame = requestAnimationFrame(updateScroll);
       };
-      requestAnimationFrame(updateScroll);
+      lenisFrame = requestAnimationFrame(updateScroll);
 
       const getLenisScroll = () => {
         const scroll = lenisInstance?.scroll;
@@ -171,6 +182,13 @@
           }
         }
         return window.scrollY || 0;
+      };
+
+      const handleLenisScroll = () => ScrollTrigger.update();
+      const handleScrollTriggerRefresh = () => {
+        if (lenisInstance) {
+          lenisInstance.update();
+        }
       };
 
       ScrollTrigger.scrollerProxy(document.body, {
@@ -191,8 +209,32 @@
         pinType: document.body.style.transform ? 'transform' : 'fixed'
       });
 
-      lenisInstance.on('scroll', () => ScrollTrigger.update());
-      ScrollTrigger.addEventListener('refresh', () => lenisInstance.update());
+      if (typeof lenisInstance.on === 'function') {
+        lenisInstance.on('scroll', handleLenisScroll);
+      }
+      ScrollTrigger.addEventListener('refresh', handleScrollTriggerRefresh);
+
+      stopLenis = () => {
+        if (lenisFrame) {
+          cancelAnimationFrame(lenisFrame);
+          lenisFrame = null;
+        }
+        if (lenisInstance) {
+          if (typeof lenisInstance.off === 'function') {
+            lenisInstance.off('scroll', handleLenisScroll);
+          }
+          if (typeof lenisInstance.destroy === 'function') {
+            lenisInstance.destroy();
+          }
+          lenisInstance = null;
+        }
+        ScrollTrigger.removeEventListener('refresh', handleScrollTriggerRefresh);
+        if (typeof ScrollTrigger.scrollerProxy === 'function') {
+          ScrollTrigger.scrollerProxy(document.body, null);
+        }
+      };
+    } else {
+      stopLenis = null;
     }
 
     const heroSection = document.querySelector('[data-scroll-scene="hero"]');
