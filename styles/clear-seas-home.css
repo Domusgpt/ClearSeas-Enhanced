@@ -84,8 +84,8 @@ body.scroll-choreo-reduced {
   z-index: -1;
   display: grid;
   place-items: center;
-  mix-blend-mode: screen;
-  opacity: calc(var(--moire-opacity) * (0.75 + var(--hero-energy) * 0.6));
+  mix-blend-mode: lighten;
+  opacity: calc(var(--moire-opacity) * (0.6 + var(--hero-energy) * 0.5));
   transform: translateY(calc(var(--hero-parallax-y) * -0.08)) scale(var(--moire-scale))
     rotate(var(--moire-rotation));
   transition: opacity 0.6s var(--ease-in-out);
@@ -99,7 +99,7 @@ body.scroll-choreo-reduced {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 40%, rgba(16, 24, 38, 0.35), transparent 70%);
+  background: radial-gradient(circle at 50% 40%, rgba(12, 20, 34, 0.4), transparent 70%);
   filter: blur(120px);
   opacity: 0.75;
 }
@@ -109,14 +109,14 @@ body.scroll-choreo-reduced {
   width: min(1200px, 90vw);
   height: min(1200px, 90vh);
   border-radius: clamp(280px, calc(520px * (1 - var(--hero-mask-progress) * 0.3)), 640px);
-  background-size: 180px 180px;
+  background-size: 200px 200px;
   background-position:
     calc(50% + var(--moire-drift-x)) calc(50% + var(--moire-drift-y)),
     calc(50% - var(--moire-drift-x)) calc(50% - var(--moire-drift-y));
-  background-blend-mode: screen;
-  filter: blur(0.2px);
+  background-blend-mode: lighten;
+  filter: blur(0.15px);
   transform: translateY(var(--hero-parallax-y));
-  opacity: calc(0.32 + var(--hero-energy) * 0.38);
+  opacity: calc(0.2 + var(--hero-energy) * 0.28);
 }
 
 .moire-channel::after {
@@ -124,69 +124,50 @@ body.scroll-choreo-reduced {
   position: absolute;
   inset: 12%;
   border-radius: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
   mix-blend-mode: overlay;
 }
 
-.moire-channel-r {
+.moire-channel-primary {
   background-image:
     repeating-linear-gradient(
-      135deg,
-      rgba(255, 64, 110, 0.35) 0px,
-      rgba(255, 64, 110, 0.35) 24px,
+      60deg,
+      rgba(0, 212, 255, 0.28) 0px,
+      rgba(0, 212, 255, 0.28) 26px,
+      transparent 26px,
+      transparent 52px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      rgba(56, 189, 248, 0.18) 0px,
+      rgba(56, 189, 248, 0.18) 38px,
+      transparent 38px,
+      transparent 76px
+    );
+  transform: translateX(calc(var(--moire-shift) * -0.35)) translateY(calc(var(--hero-parallax-y) * -0.07)) rotate(-0.6deg);
+}
+
+.moire-channel-secondary {
+  background-image:
+    repeating-linear-gradient(
+      25deg,
+      rgba(56, 189, 248, 0.18) 0px,
+      rgba(56, 189, 248, 0.18) 24px,
       transparent 24px,
       transparent 48px
     ),
     repeating-linear-gradient(
-      -135deg,
-      rgba(255, 64, 110, 0.12) 0px,
-      rgba(255, 64, 110, 0.12) 16px,
-      transparent 16px,
-      transparent 32px
+      -25deg,
+      rgba(14, 165, 233, 0.12) 0px,
+      rgba(14, 165, 233, 0.12) 40px,
+      transparent 40px,
+      transparent 80px
     );
-  transform: translateX(calc(var(--moire-shift) * -0.5)) translateY(calc(var(--hero-parallax-y) * -0.08)) rotate(-1deg);
-}
-
-.moire-channel-g {
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgba(0, 214, 255, 0.32) 0px,
-      rgba(0, 214, 255, 0.32) 20px,
-      transparent 20px,
-      transparent 40px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(0, 214, 255, 0.18) 0px,
-      rgba(0, 214, 255, 0.18) 32px,
-      transparent 32px,
-      transparent 64px
-    );
-  transform: translateX(calc(var(--moire-shift) * 0.4)) translateY(calc(var(--hero-parallax-y) * -0.05)) rotate(0.5deg);
-}
-
-.moire-channel-b {
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      rgba(120, 92, 255, 0.28) 0px,
-      rgba(120, 92, 255, 0.28) 18px,
-      transparent 18px,
-      transparent 36px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgba(120, 92, 255, 0.18) 0px,
-      rgba(120, 92, 255, 0.18) 30px,
-      transparent 30px,
-      transparent 60px
-    );
-  transform: translateX(calc(var(--moire-shift) * 0.8)) translateY(calc(var(--hero-parallax-y) * -0.12)) rotate(1.35deg);
+  transform: translateX(calc(var(--moire-shift) * 0.45)) translateY(calc(var(--hero-parallax-y) * -0.09)) rotate(0.8deg);
 }
 
 .moire-channel:not(:first-child) {
-  mix-blend-mode: lighten;
+  mix-blend-mode: screen;
 }
 
 .texture-layer {
@@ -196,7 +177,7 @@ body.scroll-choreo-reduced {
   z-index: -2;
   background-image:
     radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 55%),
-    radial-gradient(circle at 80% 0%, rgba(255, 0, 110, 0.1) 0%, transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 60%),
     linear-gradient(115deg, rgba(10, 15, 26, 0.6), rgba(10, 15, 18, 0.9));
   mix-blend-mode: screen;
   opacity: var(--texture-opacity);
