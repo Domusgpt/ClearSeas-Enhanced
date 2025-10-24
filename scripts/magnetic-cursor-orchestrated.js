@@ -30,7 +30,8 @@
   waitForGSAP(initMagneticCursor);
 
   function initMagneticCursor() {
-    console.log('🧲 Initializing magnetic cursor...');
+    console.log('🧲 CURSOR: Starting initialization...');
+    console.log('🧲 CURSOR: GSAP available =', typeof gsap);
 
     // Create cursor elements
     const cursor = document.createElement('div');
@@ -239,7 +240,8 @@
       });
     });
 
-    console.log('✨ Magnetic cursor initialized');
+    console.log('✨ CURSOR: Complete! Tracking', magneticElements.length, 'elements');
+    console.log('✨ CURSOR: Cursor elements created =', !!cursor && !!cursorFollower);
   }
 
 })();

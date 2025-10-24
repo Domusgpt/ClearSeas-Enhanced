@@ -15,11 +15,32 @@
     <link rel="stylesheet" href="styles/video-backgrounds.css">
     <link rel="stylesheet" href="styles/orchestration-master.css">
 
-    <!-- Animation Libraries - Optimized Loading -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <!-- Animation Libraries - Load Before Body -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" crossorigin="anonymous"></script>
+
+    <!-- Validation Script -->
+    <script>
+        // Validate libraries loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            const missing = [];
+            if (typeof Lenis === 'undefined') missing.push('Lenis');
+            if (typeof gsap === 'undefined') missing.push('GSAP');
+            if (typeof ScrollTrigger === 'undefined') missing.push('ScrollTrigger');
+
+            if (missing.length > 0) {
+                console.error('❌ Missing libraries:', missing.join(', '));
+                console.error('Orchestration will not work properly!');
+            } else {
+                console.log('✅ All libraries loaded successfully');
+                console.log('Lenis:', typeof Lenis);
+                console.log('GSAP:', typeof gsap, gsap.version);
+                console.log('ScrollTrigger:', typeof ScrollTrigger);
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Polytopal Field Canvas Background -->

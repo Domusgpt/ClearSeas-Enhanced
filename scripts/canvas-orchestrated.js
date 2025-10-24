@@ -234,7 +234,8 @@
     resizeCanvas();
     rafId = requestAnimationFrame(render);
 
-    console.log('🎨 Optimized canvas initialized');
+    console.log('🎨 CANVAS: Complete! Animating', nodes.length, 'nodes at 60fps');
+    console.log('🎨 CANVAS: RAF running =', !!rafId);
 
     // Cleanup
     window.addEventListener('beforeunload', () => {

@@ -38,7 +38,10 @@
   waitForLibraries(initOrchestration);
 
   function initOrchestration() {
-    console.log('🎭 Initializing smooth orchestration...');
+    console.log('🎭 ORCHESTRATION: Starting initialization...');
+    console.log('🎭 ORCHESTRATION: Lenis =', typeof Lenis);
+    console.log('🎭 ORCHESTRATION: gsap =', typeof gsap);
+    console.log('🎭 ORCHESTRATION: ScrollTrigger =', typeof ScrollTrigger);
 
     // ===== LENIS SMOOTH SCROLL =====
     const lenis = new Lenis({
@@ -319,7 +322,9 @@
       ScrollTrigger.getAll().forEach(st => st.kill());
     });
 
-    console.log('✨ Smooth orchestration initialized');
+    console.log('✨ ORCHESTRATION: Complete! All animations initialized');
+    console.log('✨ ORCHESTRATION: Lenis instance =', window.lenis);
+    console.log('✨ ORCHESTRATION: ScrollTrigger instances =', ScrollTrigger.getAll().length);
   }
 
 })();

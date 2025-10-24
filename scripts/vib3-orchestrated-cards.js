@@ -48,7 +48,8 @@
   };
 
   function initVIB3Cards() {
-    console.log('🎴 Initializing VIB3+ orchestrated cards...');
+    console.log('🎴 VIB3+ CARDS: Starting initialization...');
+    console.log('🎴 VIB3+ CARDS: GSAP available =', typeof gsap);
 
     // Create VIB3+ container (reusable)
     createVIB3Container();
@@ -83,7 +84,8 @@
       });
     });
 
-    console.log('✨ VIB3+ cards initialized');
+    console.log('✨ VIB3+ CARDS: Complete! Listening to', cards.length, 'cards');
+    console.log('✨ VIB3+ CARDS: Container created =', !!vib3Container);
   }
 
   function createVIB3Container() {
