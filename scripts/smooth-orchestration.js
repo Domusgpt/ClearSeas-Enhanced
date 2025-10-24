@@ -7,12 +7,20 @@
 (function() {
   'use strict';
 
+  // Failsafe: Show all content after 3 seconds if animations don't initialize
+  const failsafeTimeout = setTimeout(() => {
+    console.warn('⏱️ ORCHESTRATION: Timeout - showing all content as fallback');
+    document.body.classList.add('animations-timeout');
+  }, 3000);
+
   // Check for reduced motion
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (prefersReducedMotion) {
     console.log('Orchestration disabled (reduced motion preference)');
     document.documentElement.style.scrollBehavior = 'smooth';
+    document.body.classList.add('animations-failed');
+    clearTimeout(failsafeTimeout);
     return;
   }
 
@@ -325,6 +333,10 @@
     console.log('✨ ORCHESTRATION: Complete! All animations initialized');
     console.log('✨ ORCHESTRATION: Lenis instance =', window.lenis);
     console.log('✨ ORCHESTRATION: ScrollTrigger instances =', ScrollTrigger.getAll().length);
+
+    // Mark animations as loaded successfully
+    document.body.classList.add('animations-loaded');
+    clearTimeout(failsafeTimeout);
   }
 
 })();

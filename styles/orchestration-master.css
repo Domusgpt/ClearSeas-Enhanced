@@ -89,6 +89,8 @@ body {
   backface-visibility: hidden;
   transform: translateZ(0);
   will-change: transform;
+  /* Ensure cards are visible by default */
+  opacity: 1;
 }
 
 /* ===== HOLOGRAPHIC LAYERS ===== */
@@ -273,12 +275,28 @@ button:focus-visible,
 
 /* ===== SECTION REVEAL OPTIMIZATIONS ===== */
 
+/* Elements start hidden, GSAP will animate them in */
 [data-animate="reveal"] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Hero section should be visible immediately */
+#hero [data-animate="reveal"] {
   opacity: 1;
   transform: none;
 }
 
-/* Let GSAP handle animations, no CSS conflicts */
+/* Fallback: Show all content after 3 seconds if animations don't load */
+body.animations-loaded [data-animate="reveal"] {
+  /* Let GSAP handle these */
+}
+
+body.animations-failed [data-animate="reveal"],
+body.animations-timeout [data-animate="reveal"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
 
 /* ===== PRINT OPTIMIZATION ===== */
 
