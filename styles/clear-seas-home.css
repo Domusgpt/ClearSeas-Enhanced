@@ -77,6 +77,7 @@ body.scroll-choreo-reduced {
   opacity: 0.85;
 }
 
+
 .moire-layer {
   position: fixed;
   inset: -8% -12%;
@@ -84,15 +85,16 @@ body.scroll-choreo-reduced {
   z-index: -1;
   display: grid;
   place-items: center;
-  mix-blend-mode: screen;
-  opacity: calc(var(--moire-opacity) * (0.75 + var(--hero-energy) * 0.6));
+  mix-blend-mode: lighten;
+  opacity: calc(var(--moire-opacity) * (0.45 + var(--hero-energy) * 0.3));
   transform: translateY(calc(var(--hero-parallax-y) * -0.08)) scale(var(--moire-scale))
     rotate(var(--moire-rotation));
   transition: opacity 0.6s var(--ease-in-out);
+  filter: saturate(0.7);
 }
 
 .scroll-choreo-reduced .moire-layer {
-  mix-blend-mode: lighten;
+  mix-blend-mode: normal;
 }
 
 .moire-layer::before {
@@ -104,19 +106,20 @@ body.scroll-choreo-reduced {
   opacity: 0.75;
 }
 
+
 .moire-channel {
   position: relative;
   width: min(1200px, 90vw);
   height: min(1200px, 90vh);
   border-radius: clamp(280px, calc(520px * (1 - var(--hero-mask-progress) * 0.3)), 640px);
-  background-size: 180px 180px;
+  background-size: 220px 220px;
   background-position:
     calc(50% + var(--moire-drift-x)) calc(50% + var(--moire-drift-y)),
     calc(50% - var(--moire-drift-x)) calc(50% - var(--moire-drift-y));
   background-blend-mode: screen;
-  filter: blur(0.2px);
+  filter: blur(0.6px);
   transform: translateY(var(--hero-parallax-y));
-  opacity: calc(0.32 + var(--hero-energy) * 0.38);
+  opacity: calc(0.18 + var(--hero-energy) * 0.22);
 }
 
 .moire-channel::after {
@@ -128,21 +131,22 @@ body.scroll-choreo-reduced {
   mix-blend-mode: overlay;
 }
 
+
 .moire-channel-r {
   background-image:
     repeating-linear-gradient(
       135deg,
-      rgba(255, 64, 110, 0.35) 0px,
-      rgba(255, 64, 110, 0.35) 24px,
-      transparent 24px,
-      transparent 48px
+      rgba(0, 212, 255, 0.26) 0px,
+      rgba(0, 212, 255, 0.26) 30px,
+      transparent 30px,
+      transparent 60px
     ),
     repeating-linear-gradient(
       -135deg,
-      rgba(255, 64, 110, 0.12) 0px,
-      rgba(255, 64, 110, 0.12) 16px,
-      transparent 16px,
-      transparent 32px
+      rgba(168, 85, 247, 0.18) 0px,
+      rgba(168, 85, 247, 0.18) 40px,
+      transparent 40px,
+      transparent 80px
     );
   transform: translateX(calc(var(--moire-shift) * -0.5)) translateY(calc(var(--hero-parallax-y) * -0.08)) rotate(-1deg);
 }
@@ -151,17 +155,17 @@ body.scroll-choreo-reduced {
   background-image:
     repeating-linear-gradient(
       45deg,
-      rgba(0, 214, 255, 0.32) 0px,
-      rgba(0, 214, 255, 0.32) 20px,
-      transparent 20px,
-      transparent 40px
+      rgba(0, 212, 255, 0.18) 0px,
+      rgba(0, 212, 255, 0.18) 32px,
+      transparent 32px,
+      transparent 64px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgba(0, 214, 255, 0.18) 0px,
-      rgba(0, 214, 255, 0.18) 32px,
-      transparent 32px,
-      transparent 64px
+      rgba(255, 0, 110, 0.16) 0px,
+      rgba(255, 0, 110, 0.16) 48px,
+      transparent 48px,
+      transparent 96px
     );
   transform: translateX(calc(var(--moire-shift) * 0.4)) translateY(calc(var(--hero-parallax-y) * -0.05)) rotate(0.5deg);
 }
@@ -170,17 +174,17 @@ body.scroll-choreo-reduced {
   background-image:
     repeating-linear-gradient(
       90deg,
-      rgba(120, 92, 255, 0.28) 0px,
-      rgba(120, 92, 255, 0.28) 18px,
-      transparent 18px,
-      transparent 36px
+      rgba(168, 85, 247, 0.22) 0px,
+      rgba(168, 85, 247, 0.22) 26px,
+      transparent 26px,
+      transparent 52px
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(120, 92, 255, 0.18) 0px,
-      rgba(120, 92, 255, 0.18) 30px,
-      transparent 30px,
-      transparent 60px
+      rgba(0, 212, 255, 0.14) 0px,
+      rgba(0, 212, 255, 0.14) 36px,
+      transparent 36px,
+      transparent 72px
     );
   transform: translateX(calc(var(--moire-shift) * 0.8)) translateY(calc(var(--hero-parallax-y) * -0.12)) rotate(1.35deg);
 }
