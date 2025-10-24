@@ -13,7 +13,13 @@
     <link rel="stylesheet" href="styles/visual-codex.css">
     <link rel="stylesheet" href="styles/clear-seas-enhanced.css">
     <link rel="stylesheet" href="styles/video-backgrounds.css">
-    <link rel="stylesheet" href="styles/performance-optimized.css">
+    <link rel="stylesheet" href="styles/orchestration-master.css">
+
+    <!-- Animation Libraries - Optimized Loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 </head>
 <body>
     <!-- Polytopal Field Canvas Background -->
@@ -405,12 +411,57 @@
         </div>
     </footer>
 
-    <!-- Optimized Core Scripts -->
-    <script src="scripts/clear-seas-home-optimized.js" defer></script>
+    <!-- Orchestrated Core Scripts - Load Order Matters -->
+    <script src="scripts/canvas-orchestrated.js" defer></script>
     <script src="scripts/video-backgrounds-optimized.js" defer></script>
-    <script src="scripts/animations-optimized.js" defer></script>
-    <script src="scripts/interactions-optimized.js" defer></script>
-    <script src="scripts/smooth-scroll-optimized.js" defer></script>
+    <script src="scripts/smooth-orchestration.js" defer></script>
+    <script src="scripts/vib3-orchestrated-cards.js" defer></script>
+    <script src="scripts/magnetic-cursor-orchestrated.js" defer></script>
     <script src="scripts/performance-monitor.js" defer></script>
+
+    <!-- Simple header handler -->
+    <script>
+        (function() {
+            const header = document.querySelector('.site-header');
+            if (!header) return;
+
+            let ticking = false;
+            const updateHeader = () => {
+                header.classList.toggle('is-scrolled', window.scrollY > 12);
+                ticking = false;
+            };
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(updateHeader);
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            updateHeader();
+
+            // Nav toggle
+            const navToggle = document.querySelector('.nav-toggle');
+            const nav = document.getElementById('primary-navigation');
+            if (navToggle && nav) {
+                navToggle.addEventListener('click', () => {
+                    const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+                    navToggle.setAttribute('aria-expanded', String(!expanded));
+                    nav.classList.toggle('is-open', !expanded);
+                });
+
+                nav.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        navToggle.setAttribute('aria-expanded', 'false');
+                        nav.classList.remove('is-open');
+                    });
+                });
+            }
+
+            // Year
+            const year = document.getElementById('current-year');
+            if (year) year.textContent = new Date().getFullYear();
+        })();
+    </script>
 </body>
 </html>
