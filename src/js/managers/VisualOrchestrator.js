@@ -48,8 +48,8 @@ export class VisualOrchestrator {
                 chaos: 0.15,
                 speed: 0.5,
                 hue: 180,
-                rgbOffset: 0.002,
-                moireIntensity: 0.1,
+                rgbOffset: 0.0005,
+                moireIntensity: 0.05,
                 formMix: 1.0
             },
             signals: {
@@ -59,8 +59,8 @@ export class VisualOrchestrator {
                 chaos: 0.4,
                 speed: 0.8,
                 hue: 280,
-                rgbOffset: 0.005,
-                moireIntensity: 0.3,
+                rgbOffset: 0.0008,
+                moireIntensity: 0.12,
                 formMix: 1.0
             },
             capabilities: {
@@ -70,8 +70,8 @@ export class VisualOrchestrator {
                 chaos: 0.1,
                 speed: 0.4,
                 hue: 200,
-                rgbOffset: 0.001,
-                moireIntensity: 0.05,
+                rgbOffset: 0.0004,
+                moireIntensity: 0.04,
                 formMix: 1.0
             },
             research: {
@@ -81,8 +81,8 @@ export class VisualOrchestrator {
                 chaos: 0.3,
                 speed: 0.6,
                 hue: 240,
-                rgbOffset: 0.003,
-                moireIntensity: 0.2,
+                rgbOffset: 0.0006,
+                moireIntensity: 0.08,
                 formMix: 1.0
             },
             platforms: {
@@ -92,8 +92,8 @@ export class VisualOrchestrator {
                 chaos: 0.25,
                 speed: 0.7,
                 hue: 160,
-                rgbOffset: 0.004,
-                moireIntensity: 0.25,
+                rgbOffset: 0.0008,
+                moireIntensity: 0.1,
                 formMix: 1.0
             },
             contact: {
@@ -103,8 +103,8 @@ export class VisualOrchestrator {
                 chaos: 0.2,
                 speed: 0.5,
                 hue: 200,
-                rgbOffset: 0.002,
-                moireIntensity: 0.15,
+                rgbOffset: 0.0005,
+                moireIntensity: 0.06,
                 formMix: 1.0
             }
         };
@@ -231,9 +231,9 @@ export class VisualOrchestrator {
     onCardHover(card, isEntering) {
         if (isEntering) {
             // Card is being hovered - increase effects
-            this.visualTarget.chaos = Math.min(1.0, this.visualTarget.chaos + 0.15);
-            this.visualTarget.rgbOffset = Math.min(0.01, this.visualTarget.rgbOffset + 0.003);
-            this.visualTarget.moireIntensity = Math.min(1.0, this.visualTarget.moireIntensity + 0.2);
+            this.visualTarget.chaos = Math.min(1.0, this.visualTarget.chaos + 0.12);
+            this.visualTarget.rgbOffset = Math.min(0.006, this.visualTarget.rgbOffset + 0.0008);
+            this.visualTarget.moireIntensity = Math.min(0.35, this.visualTarget.moireIntensity + 0.06);
             
             // Trigger card emergence effect
             this.triggerCardEmergence(card);
@@ -347,10 +347,10 @@ export class VisualOrchestrator {
             this.state.mouseVelocity.x ** 2 + 
             this.state.mouseVelocity.y ** 2
         );
-        this.visualTarget.rgbOffset = profile.rgbOffset + (mouseVelMag * 0.005);
-        
+        this.visualTarget.rgbOffset = profile.rgbOffset + (mouseVelMag * 0.0015);
+
         // Moiré increases with scroll velocity
-        this.visualTarget.moireIntensity = profile.moireIntensity + (this.state.scrollVelocity * 0.3);
+        this.visualTarget.moireIntensity = profile.moireIntensity + (this.state.scrollVelocity * 0.12);
         
         // Hue shifts slightly based on mouse position
         const hueShift = (this.state.mousePos.x - 0.5) * 40;
@@ -360,8 +360,8 @@ export class VisualOrchestrator {
         this.visualTarget.intensity = Math.min(1.0, this.visualTarget.intensity);
         this.visualTarget.chaos = Math.min(1.0, this.visualTarget.chaos);
         this.visualTarget.speed = Math.min(2.0, this.visualTarget.speed);
-        this.visualTarget.rgbOffset = Math.min(0.02, this.visualTarget.rgbOffset);
-        this.visualTarget.moireIntensity = Math.min(1.0, this.visualTarget.moireIntensity);
+        this.visualTarget.rgbOffset = Math.min(0.008, this.visualTarget.rgbOffset);
+        this.visualTarget.moireIntensity = Math.min(0.45, this.visualTarget.moireIntensity);
     }
     
     interpolateVisualState(deltaTime) {
