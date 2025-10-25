@@ -13,6 +13,34 @@
     <link rel="stylesheet" href="styles/visual-codex.css">
     <link rel="stylesheet" href="styles/clear-seas-enhanced.css">
     <link rel="stylesheet" href="styles/video-backgrounds.css">
+    <link rel="stylesheet" href="styles/orchestration-master.css">
+
+    <!-- Animation Libraries - Load Before Body -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" crossorigin="anonymous"></script>
+
+    <!-- Validation Script -->
+    <script>
+        // Validate libraries loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            const missing = [];
+            if (typeof Lenis === 'undefined') missing.push('Lenis');
+            if (typeof gsap === 'undefined') missing.push('GSAP');
+            if (typeof ScrollTrigger === 'undefined') missing.push('ScrollTrigger');
+
+            if (missing.length > 0) {
+                console.error('❌ Missing libraries:', missing.join(', '));
+                console.error('Orchestration will not work properly!');
+            } else {
+                console.log('✅ All libraries loaded successfully');
+                console.log('Lenis:', typeof Lenis);
+                console.log('GSAP:', typeof gsap, gsap.version);
+                console.log('ScrollTrigger:', typeof ScrollTrigger);
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Polytopal Field Canvas Background -->
@@ -404,8 +432,55 @@
         </div>
     </footer>
 
-    <script src="scripts/clear-seas-home.js" defer></script>
-    <script src="scripts/video-backgrounds.js" defer></script>
-    <script src="scripts/vib3-card-interactions.js" defer></script>
+    <!-- Choreographed Orchestration System -->
+    <script src="scripts/canvas-orchestrated.js" defer></script>
+    <script src="scripts/video-backgrounds-optimized.js" defer></script>
+    <script src="scripts/master-orchestrator.js" defer></script>
+    <script src="scripts/performance-monitor.js" defer></script>
+
+    <!-- Simple header handler -->
+    <script>
+        (function() {
+            const header = document.querySelector('.site-header');
+            if (!header) return;
+
+            let ticking = false;
+            const updateHeader = () => {
+                header.classList.toggle('is-scrolled', window.scrollY > 12);
+                ticking = false;
+            };
+
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(updateHeader);
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            updateHeader();
+
+            // Nav toggle
+            const navToggle = document.querySelector('.nav-toggle');
+            const nav = document.getElementById('primary-navigation');
+            if (navToggle && nav) {
+                navToggle.addEventListener('click', () => {
+                    const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+                    navToggle.setAttribute('aria-expanded', String(!expanded));
+                    nav.classList.toggle('is-open', !expanded);
+                });
+
+                nav.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        navToggle.setAttribute('aria-expanded', 'false');
+                        nav.classList.remove('is-open');
+                    });
+                });
+            }
+
+            // Year
+            const year = document.getElementById('current-year');
+            if (year) year.textContent = new Date().getFullYear();
+        })();
+    </script>
 </body>
 </html>

@@ -87,17 +87,32 @@
    */
   function applyCardTransform(card, tilt) {
     const { tiltX, tiltY } = tilt;
-    const scale = 1.05;
+    const scale = 1.08; // Slightly more pronounced lift
     const translateZ = CONFIG.floatDistance;
 
-    card.style.transform = `
-      perspective(1000px)
-      translateY(-${translateZ}px)
-      translateZ(${translateZ}px)
-      rotateX(${tiltX}deg)
-      rotateY(${tiltY}deg)
-      scale(${scale})
-    `;
+    // Use GSAP for smoother transforms if available
+    if (typeof gsap !== 'undefined') {
+      gsap.to(card, {
+        rotationX: tiltX,
+        rotationY: tiltY,
+        y: -translateZ,
+        z: translateZ,
+        scale: scale,
+        duration: 0.6,
+        ease: 'power2.out',
+        transformPerspective: 1000,
+        transformStyle: 'preserve-3d'
+      });
+    } else {
+      card.style.transform = `
+        perspective(1000px)
+        translateY(-${translateZ}px)
+        translateZ(${translateZ}px)
+        rotateX(${tiltX}deg)
+        rotateY(${tiltY}deg)
+        scale(${scale})
+      `;
+    }
 
     // Add glow based on tilt intensity
     const glowStrength = Math.abs(tiltX) + Math.abs(tiltY);
@@ -105,9 +120,12 @@
       ? '0, 212, 255'
       : '192, 132, 252';
 
+    const shadowTransition = 'box-shadow 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+    card.style.transition = shadowTransition;
     card.style.boxShadow = `
-      0 ${CONFIG.floatDistance * 1.5}px ${CONFIG.glowIntensity + glowStrength}px rgba(0, 0, 0, 0.4),
-      0 0 ${CONFIG.glowIntensity}px rgba(${glowColor}, ${0.3 + (glowStrength / 100)})
+      0 ${CONFIG.floatDistance * 2}px ${CONFIG.glowIntensity + glowStrength * 1.5}px rgba(0, 0, 0, 0.5),
+      0 0 ${CONFIG.glowIntensity * 1.5}px rgba(${glowColor}, ${0.4 + (glowStrength / 80)}),
+      0 0 ${CONFIG.glowIntensity * 0.5}px rgba(${glowColor}, ${0.6 + (glowStrength / 60)})
     `;
   }
 
@@ -187,9 +205,32 @@
       rafId = null;
     }
 
-    card.style.transform = '';
-    card.style.boxShadow = '';
-    card.style.willChange = 'auto';
+    // Use GSAP for smoother return animation if available
+    if (typeof gsap !== 'undefined') {
+      gsap.to(card, {
+        rotationX: 0,
+        rotationY: 0,
+        y: 0,
+        z: 0,
+        scale: 1,
+        duration: 0.8,
+        ease: 'elastic.out(1, 0.5)',
+        onComplete: () => {
+          card.style.willChange = 'auto';
+        }
+      });
+
+      // Animate box shadow back
+      gsap.to(card, {
+        boxShadow: '',
+        duration: 0.4,
+        ease: 'power2.out'
+      });
+    } else {
+      card.style.transform = '';
+      card.style.boxShadow = '';
+      card.style.willChange = 'auto';
+    }
 
     if (vib3Container) {
       vib3Container.style.opacity = '0';
