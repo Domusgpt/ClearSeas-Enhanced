@@ -29,6 +29,9 @@
   function initMasterOrchestration() {
     console.log('🎼 MASTER ORCHESTRATOR: Starting...');
 
+    // Ensure all content is visible immediately (animations are enhancements only)
+    document.body.classList.add('animations-loaded');
+
     // Register plugin
     gsap.registerPlugin(ScrollTrigger);
 
@@ -133,7 +136,10 @@
       url.searchParams.set('geo', params.geometry);
       url.searchParams.set('hue', Math.round(params.hue));
       url.searchParams.set('intensity', params.intensity.toFixed(2));
-      url.searchParams.set('auto', '0'); // Manual control
+      url.searchParams.set('auto', '1'); // Enable auto-rotation
+      url.searchParams.set('controls', '0'); // HIDE CONTROLS
+      url.searchParams.set('menu', '0'); // HIDE MENU
+      url.searchParams.set('shimmer', '1'); // Enable shimmer
       url.searchParams.set('rotXY', params.rotation4d.xy.toFixed(3));
       url.searchParams.set('rotXZ', params.rotation4d.xz.toFixed(3));
       url.searchParams.set('rotXW', params.rotation4d.xw.toFixed(3));
@@ -150,7 +156,7 @@
       iframe,
       params,
       updateURL: updateVIB3URL,
-      show: (opacity = 0.3) => gsap.to(container, { opacity, duration: 1, ease: 'power2.out' }),
+      show: (opacity = 0.6) => gsap.to(container, { opacity, duration: 1, ease: 'power2.out' }), // Increased opacity
       hide: () => gsap.to(container, { opacity: 0, duration: 0.5, ease: 'power2.in' })
     };
   }
@@ -194,9 +200,9 @@
       trigger: '#capabilities',
       start: 'top center',
       end: 'bottom center',
-      onEnter: () => vib3System.show(0.2),
+      onEnter: () => vib3System.show(0.5), // More visible
       onLeave: () => vib3System.hide(),
-      onEnterBack: () => vib3System.show(0.2),
+      onEnterBack: () => vib3System.show(0.5),
       onLeaveBack: () => vib3System.hide()
     });
   }
@@ -208,49 +214,49 @@
 
     console.log('🎬 HERO: Orchestrating entrance...');
 
-    const tl = gsap.timeline({ delay: 0.3 });
+    const tl = gsap.timeline({ delay: 0.1 }); // Faster entrance
 
-    // Staggered hero entrance
+    // Staggered hero entrance (FROM opacity 1, subtle effect)
     tl.from('.hero-text .eyebrow', {
-      y: 60,
-      opacity: 0,
-      duration: 1,
+      y: 30, // Smaller movement
+      opacity: 0.5, // Don't start fully invisible
+      duration: 0.8,
       ease: 'power3.out'
     })
     .from('.hero-text h1', {
-      y: 80,
-      opacity: 0,
-      duration: 1.2,
-      ease: 'power3.out'
-    }, '-=0.7')
-    .from('.hero-text .hero-lede', {
       y: 40,
-      opacity: 0,
+      opacity: 0.5,
       duration: 1,
-      ease: 'power2.out'
-    }, '-=0.8')
-    .from('.hero-cta', {
-      y: 30,
-      opacity: 0,
+      ease: 'power3.out'
+    }, '-=0.6')
+    .from('.hero-text .hero-lede', {
+      y: 20,
+      opacity: 0.7,
       duration: 0.8,
       ease: 'power2.out'
-    }, '-=0.6')
-    .from('.hero-tags li', {
-      x: -20,
-      opacity: 0,
+    }, '-=0.7')
+    .from('.hero-cta', {
+      y: 15,
+      opacity: 0.7,
       duration: 0.6,
-      stagger: 0.1,
       ease: 'power2.out'
     }, '-=0.5')
+    .from('.hero-tags li', {
+      x: -10,
+      opacity: 0.7,
+      duration: 0.4,
+      stagger: 0.08,
+      ease: 'power2.out'
+    }, '-=0.4')
     .from('.hero-panels .signal-card', {
-      y: 100,
-      opacity: 0,
-      scale: 0.9,
-      rotationY: -15,
-      duration: 1.2,
-      stagger: 0.2,
+      y: 50,
+      opacity: 0.5,
+      scale: 0.95,
+      rotationY: -10,
+      duration: 1,
+      stagger: 0.15,
       ease: 'back.out(1.2)'
-    }, '-=1');
+    }, '-=0.8');
 
     // Hero parallax on scroll
     gsap.to('.hero-text', {
@@ -354,7 +360,7 @@
     cardContainers.forEach(container => {
       const cards = container.querySelectorAll('.capability-card, .platform-card, .step, .research-lab');
 
-      // Choreographed card entrance
+      // Choreographed card entrance (subtle, content always visible)
       gsap.from(cards, {
         scrollTrigger: {
           trigger: container,
@@ -362,12 +368,12 @@
           end: 'top 40%',
           scrub: 0.5
         },
-        y: 100,
-        opacity: 0,
-        scale: 0.9,
-        rotationY: -20,
+        y: 40,
+        opacity: 0.7, // Don't start invisible
+        scale: 0.95,
+        rotationY: -10,
         stagger: {
-          amount: 0.4,
+          amount: 0.3,
           from: 'start'
         },
         ease: 'power3.out'
@@ -385,10 +391,10 @@
             ease: 'power2.out'
           });
 
-          // Show VIB3+ for this card
+          // Show VIB3+ for this card with higher opacity
           vib3System.params.hue = (idx * 60) % 360;
           vib3System.updateURL();
-          vib3System.show(0.25);
+          vib3System.show(0.7); // Much more visible on hover
         });
 
         card.addEventListener('mousemove', function(e) {

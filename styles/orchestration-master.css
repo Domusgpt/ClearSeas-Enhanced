@@ -275,27 +275,35 @@ button:focus-visible,
 
 /* ===== SECTION REVEAL OPTIMIZATIONS ===== */
 
-/* Elements start hidden, GSAP will animate them in */
+/* ALL CONTENT VISIBLE BY DEFAULT - animations are just enhancements */
 [data-animate="reveal"] {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-/* Hero section should be visible immediately */
-#hero [data-animate="reveal"] {
   opacity: 1;
   transform: none;
 }
 
-/* Fallback: Show all content after 3 seconds if animations don't load */
-body.animations-loaded [data-animate="reveal"] {
-  /* Let GSAP handle these */
+/* Hero section always visible */
+#hero, #hero * {
+  opacity: 1 !important;
 }
 
-body.animations-failed [data-animate="reveal"],
-body.animations-timeout [data-animate="reveal"] {
+/* Cards always visible */
+.signal-card,
+.capability-card,
+.platform-card,
+.research-lab,
+.step {
   opacity: 1 !important;
-  transform: none !important;
+}
+
+/* Sections always visible */
+section {
+  opacity: 1;
+}
+
+/* Headings always visible */
+.section-heading,
+.section-heading * {
+  opacity: 1;
 }
 
 /* ===== PRINT OPTIMIZATION ===== */
