@@ -18,14 +18,32 @@ export class ParticleNetworkSystem {
             depthLayers: options.depthLayers || 3,
             ...options
         };
-        
+
+        this.baseOptions = { ...this.options };
+
+        this.dynamicState = {
+            speedMultiplier: 1,
+            targetSpeedMultiplier: 1,
+            connectionMultiplier: 1,
+            targetConnectionMultiplier: 1,
+            mouseInfluenceMultiplier: 1,
+            targetMouseInfluenceMultiplier: 1,
+            quality: 1,
+            targetQuality: 1
+        };
+
+        this.orchestratorColor = { h: 180, s: 0.8, v: 0.85 };
+        this.heroContext = { energy: 0, focus: 0 };
+
         this.particles = [];
         this.connections = [];
         this.gl = null;
         this.program = null;
         this.lineProgram = null;
         this.isInitialized = false;
-        
+
+        this.handleVisualStateUpdate = this.handleVisualStateUpdate.bind(this);
+
         this.colorSchemes = {
             cyan: { h: 180, s: 0.8, v: 0.9 },
             purple: { h: 280, s: 0.7, v: 0.85 },
@@ -56,18 +74,20 @@ export class ParticleNetworkSystem {
         }, 10); // Higher priority
         
         this.isInitialized = true;
+        window.addEventListener('visualStateUpdate', this.handleVisualStateUpdate);
+
         console.log(`✨ Particle Network initialized with ${this.particles.length} particles`);
-        
+
         return true;
     }
     
     createParticles() {
         this.particles = [];
-        
+
         for (let i = 0; i < this.options.particleCount; i++) {
             const layer = Math.floor(i / (this.options.particleCount / this.options.depthLayers));
             const depth = layer / this.options.depthLayers;
-            
+
             this.particles.push({
                 x: Math.random() * 2 - 1,
                 y: Math.random() * 2 - 1,
@@ -79,6 +99,41 @@ export class ParticleNetworkSystem {
                 hue: (depth * 60) % 360
             });
         }
+    }
+
+    handleVisualStateUpdate(event) {
+        const detail = event?.detail;
+        if (!detail) return;
+
+        const state = detail.state || {};
+        const multipliers = detail.multipliers || {};
+        const context = detail.context || {};
+
+        const intensity = Number.isFinite(state.intensity) ? state.intensity : 0.6;
+        const chaos = Number.isFinite(state.chaos) ? state.chaos : 0.2;
+        const speed = Number.isFinite(state.speed) ? state.speed : 0.5;
+        const hue = Number.isFinite(state.hue) ? state.hue : this.orchestratorColor.h;
+
+        const energy = Number.isFinite(context.heroEnergy)
+            ? context.heroEnergy
+            : (Number.isFinite(context.userEnergy) ? context.userEnergy : this.heroContext.energy);
+        const focus = Number.isFinite(context.heroFocus) ? context.heroFocus : this.heroContext.focus;
+        const hovered = Number.isFinite(context.hoveredCards) ? context.hoveredCards : 0;
+        const scrollVelocity = Number.isFinite(context.scrollVelocity) ? context.scrollVelocity : 0;
+
+        this.dynamicState.targetSpeedMultiplier = this.clamp(0.7 + speed * 0.7 + chaos * 0.4 + scrollVelocity * 0.12, 0.4, 2.8);
+        this.dynamicState.targetConnectionMultiplier = this.clamp(0.78 + intensity * 0.55 - chaos * 0.2 + focus * 0.25, 0.45, 2.4);
+        this.dynamicState.targetMouseInfluenceMultiplier = this.clamp(0.85 + focus * 0.4 + hovered * 0.05 + (multipliers.mouseActivity ? (multipliers.mouseActivity - 1) * 0.4 : 0), 0.35, 2.2);
+        this.dynamicState.targetQuality = this.clamp(0.8 + energy * 0.4, 0.4, 1.4);
+
+        this.heroContext = {
+            energy: Math.max(0, Math.min(1, energy)),
+            focus: Math.max(0, Math.min(1, focus))
+        };
+
+        const saturation = Math.min(1, 0.6 + intensity * 0.3 + energy * 0.25);
+        const value = Math.min(1, 0.62 + energy * 0.3 + focus * 0.12);
+        this.orchestratorColor = { h: hue, s: saturation, v: value };
     }
     
     initializeShaders() {
@@ -196,28 +251,49 @@ export class ParticleNetworkSystem {
     }
     
     update(deltaTime, mouse, scroll) {
-        const dt = deltaTime / 1000;
-        
-        // Update particle positions
+        const rawDt = Number.isFinite(deltaTime) ? deltaTime : 16;
+        const dt = rawDt / 1000;
+        const smoothing = 1 - Math.exp(-rawDt / 420);
+
+        this.dynamicState.speedMultiplier += (this.dynamicState.targetSpeedMultiplier - this.dynamicState.speedMultiplier) * smoothing;
+        this.dynamicState.connectionMultiplier += (this.dynamicState.targetConnectionMultiplier - this.dynamicState.connectionMultiplier) * smoothing;
+        this.dynamicState.mouseInfluenceMultiplier += (this.dynamicState.targetMouseInfluenceMultiplier - this.dynamicState.mouseInfluenceMultiplier) * smoothing;
+        this.dynamicState.quality += (this.dynamicState.targetQuality - this.dynamicState.quality) * smoothing;
+
+        const speed = this.baseOptions.speed * this.dynamicState.speedMultiplier;
+        const baseSpeed = this.baseOptions.speed || 0.001;
+        const speedScale = speed / baseSpeed;
+        const connectionDistance = this.baseOptions.connectionDistance * this.dynamicState.connectionMultiplier;
+        const mouseInfluence = this.baseOptions.mouseInfluence * this.dynamicState.mouseInfluenceMultiplier;
+        const focusInfluence = Math.max(0, Math.min(1, this.heroContext.focus));
+
+        const pointerX = ((mouse && Number.isFinite(mouse.x)) ? mouse.x : 0.5) * 2 - 1;
+        const pointerY = ((mouse && Number.isFinite(mouse.y)) ? mouse.y : 0.5) * 2 - 1;
+        const scrollAmount = Number.isFinite(scroll) ? scroll : 0;
+
+        this.connections = [];
+
         this.particles.forEach(particle => {
-            // Apply velocity
-            particle.x += particle.vx * dt;
-            particle.y += particle.vy * dt;
-            
-            // Mouse influence
-            const dx = mouse.x * 2 - 1 - particle.x;
-            const dy = mouse.y * 2 - 1 - particle.y;
+            // Apply velocity scaled by dynamic speed
+            particle.x += particle.vx * dt * speedScale;
+            particle.y += particle.vy * dt * speedScale;
+
+            // Mouse + hero focus influence
+            const dx = pointerX - particle.x;
+            const dy = pointerY - particle.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < this.options.mouseInfluence) {
-                const force = (1.0 - dist / this.options.mouseInfluence) * 0.001;
+            const influenceRadius = mouseInfluence * (1 + focusInfluence * 0.45);
+
+            if (dist < influenceRadius) {
+                const force = (1.0 - dist / influenceRadius) * 0.0015;
                 particle.vx += dx * force;
                 particle.vy += dy * force;
             }
-            
-            // Scroll influence on depth
-            particle.z = (particle.z + scroll * 0.001) % 1.0;
-            
+
+            // Scroll and energy influence on depth
+            const energy = Math.max(0, Math.min(1, this.heroContext.energy));
+            particle.z = (particle.z + (scrollAmount * 0.001 + energy * 0.0006) * speedScale) % 1.0;
+
             // Bounce off edges
             if (particle.x < -1 || particle.x > 1) {
                 particle.vx *= -0.8;
@@ -227,25 +303,25 @@ export class ParticleNetworkSystem {
                 particle.vy *= -0.8;
                 particle.y = Math.max(-1, Math.min(1, particle.y));
             }
-            
-            // Friction
-            particle.vx *= 0.99;
-            particle.vy *= 0.99;
+
+            // Friction with mild energy compensation
+            const friction = 0.99 - energy * 0.02;
+            particle.vx *= friction;
+            particle.vy *= friction;
         });
-        
-        // Calculate connections
-        this.connections = [];
+
+        const maxDistance = connectionDistance;
         for (let i = 0; i < this.particles.length; i++) {
             for (let j = i + 1; j < this.particles.length; j++) {
                 const p1 = this.particles[i];
                 const p2 = this.particles[j];
-                
+
                 const dx = p1.x - p2.x;
                 const dy = p1.y - p2.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist < this.options.connectionDistance) {
-                    const alpha = 1.0 - dist / this.options.connectionDistance;
+
+                if (dist < maxDistance) {
+                    const alpha = 1.0 - dist / maxDistance;
                     this.connections.push({
                         x1: p1.x, y1: p1.y,
                         x2: p2.x, y2: p2.y,
@@ -254,29 +330,38 @@ export class ParticleNetworkSystem {
                 }
             }
         }
+
+        this.currentConnectionDistance = maxDistance;
+    }
     }
     
     render(context) {
         const { deltaTime, mouse, scroll, quality } = context;
         const gl = this.gl;
-        
+
         // Update particles
         this.update(deltaTime, mouse, scroll);
-        
+
         // Enable blending
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        
-        // Get base color from color scheme
+
+        // Blend orchestrator color with configured scheme
         const scheme = this.colorSchemes[this.options.colorScheme] || this.colorSchemes.cyan;
-        const baseColor = this.hsv2rgb(scheme.h, scheme.s, scheme.v);
-        
+        const blendFactor = 0.5;
+        const hue = (scheme.h * (1 - blendFactor)) + (this.orchestratorColor.h * blendFactor);
+        const saturation = Math.min(1, (scheme.s * (1 - blendFactor)) + (this.orchestratorColor.s * blendFactor));
+        const value = Math.min(1, (scheme.v * (1 - blendFactor)) + (this.orchestratorColor.v * blendFactor));
+        const baseColor = this.hsv2rgb(hue, saturation, value);
+
+        const effectiveQuality = Math.max(0.25, Math.min(1, quality * this.dynamicState.quality));
+
         // Render connections
-        this.renderConnections(baseColor, quality);
-        
+        this.renderConnections(baseColor, effectiveQuality);
+
         // Render particles
-        this.renderParticles(baseColor, quality);
-        
+        this.renderParticles(baseColor, effectiveQuality);
+
         gl.disable(gl.BLEND);
     }
     
@@ -403,6 +488,15 @@ export class ParticleNetworkSystem {
         gl.deleteBuffer(hueBuffer);
     }
     
+    clamp(value, min, max) {
+        if (!Number.isFinite(value)) {
+            return min;
+        }
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
     hsv2rgb(h, s, v) {
         h = h / 360;
         const i = Math.floor(h * 6);
@@ -429,8 +523,9 @@ export class ParticleNetworkSystem {
             this.options.colorScheme = scheme;
         }
     }
-    
+
     dispose() {
+        window.removeEventListener('visualStateUpdate', this.handleVisualStateUpdate);
         const gl = this.gl;
         if (this.program) gl.deleteProgram(this.program);
         if (this.lineProgram) gl.deleteProgram(this.lineProgram);

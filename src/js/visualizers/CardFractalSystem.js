@@ -9,7 +9,11 @@ export class CardFractalSystem {
         this.canvases = new Map();
         this.contexts = new Map();
         this.activeEffects = new Map();
-        
+        this.currentColor = { h: 200, s: 0.75, v: 0.85 };
+
+        this.handleVisualStateUpdate = this.handleVisualStateUpdate.bind(this);
+        window.addEventListener('visualStateUpdate', this.handleVisualStateUpdate);
+
         this.init();
     }
     
@@ -20,6 +24,25 @@ export class CardFractalSystem {
         });
         
         console.log('🔮 Card Fractal System initialized - decay & emergence ready');
+    }
+
+    handleVisualStateUpdate(event) {
+        const detail = event?.detail;
+        if (!detail) return;
+
+        const state = detail.state || {};
+        const context = detail.context || {};
+
+        const hue = Number.isFinite(state.hue) ? state.hue : this.currentColor.h;
+        const intensity = Number.isFinite(state.intensity) ? state.intensity : 0.6;
+        const energy = Number.isFinite(context.heroEnergy)
+            ? context.heroEnergy
+            : (Number.isFinite(context.userEnergy) ? context.userEnergy : 0.5);
+
+        const saturation = Math.min(1, 0.6 + intensity * 0.25 + energy * 0.25);
+        const value = Math.min(1, 0.65 + energy * 0.3);
+
+        this.currentColor = { h: hue, s: saturation, v: value };
     }
     
     prepareCard(card) {
@@ -90,7 +113,8 @@ export class CardFractalSystem {
         
         if (!canvas || !ctx || !card) return;
         
-        const { fractalDepth = 4, color = { h: 180, s: 0.8, v: 0.9 } } = detail;
+        const { fractalDepth = 4 } = detail;
+        const color = detail.color || this.currentColor;
         
         const effect = {
             type: 'decay',
@@ -163,7 +187,8 @@ export class CardFractalSystem {
         
         if (!canvas || !ctx || !card) return;
         
-        const { intensity = 0.7, color = { h: 280, s: 0.7, v: 0.85 } } = detail;
+        const { intensity = 0.7 } = detail;
+        const color = detail.color || this.currentColor;
         
         const effect = {
             type: 'emergence',
@@ -398,5 +423,6 @@ export class CardFractalSystem {
         this.canvases.clear();
         this.contexts.clear();
         this.activeEffects.clear();
+        window.removeEventListener('visualStateUpdate', this.handleVisualStateUpdate);
     }
 }
