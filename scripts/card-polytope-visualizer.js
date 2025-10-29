@@ -641,15 +641,29 @@
     console.log('Card polytope visualizer initialized');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function shouldAutoInit() {
+    if (window.__CARD_POLYTOPE_DISABLE_AUTOINIT__ === true) {
+      return false;
+    }
+    const root = document.documentElement;
+    if (root && root.dataset && root.dataset.cardPolytopeAutoinit === 'false') {
+      return false;
+    }
+    return true;
+  }
+
+  if (shouldAutoInit()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      init();
+    }
   }
 
   // Expose for external control
   window.CardPolytopeVisualizer = CardPolytopeVisualizer;
   window.CardPolytopeEnhancer = CardPolytopeEnhancer;
+  window.initCardPolytopeEnhancer = init;
 
 })();
 
