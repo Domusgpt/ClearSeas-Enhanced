@@ -21,10 +21,30 @@ export class PolytopalFieldVisualizer {
             particleGlow: options.particleGlow !== false
         };
 
+        this.baseSettings = {
+            baseCount: this.settings.baseCount,
+            maxVelocity: this.settings.maxVelocity,
+            connectionDistance: this.settings.connectionDistance
+        };
+
+        this.dynamicState = {
+            density: 1,
+            targetDensity: 1,
+            velocity: 1,
+            targetVelocity: 1,
+            connection: 1,
+            targetConnection: 1
+        };
+
+        this.orchestratorColor = { h: 190, s: 0.78, v: 0.86 };
+        this.heroContext = { focus: 0, pointerShift: 0, energy: 0 };
+
         this.nodes = [];
         this.pointer = { x: 0, y: 0, active: false };
         this.time = 0;
         this.isInitialized = false;
+
+        this.handleVisualStateUpdate = this.handleVisualStateUpdate.bind(this);
     }
 
     initialize() {
@@ -40,6 +60,8 @@ export class PolytopalFieldVisualizer {
         this.setupNodes();
         this.setupEventListeners();
 
+        window.addEventListener('visualStateUpdate', this.handleVisualStateUpdate);
+
         // Register render callback
         this.canvasManager.registerRenderCallback(this.canvasId, this.render.bind(this));
 
@@ -54,6 +76,32 @@ export class PolytopalFieldVisualizer {
 
         const nodeCount = Math.round(this.settings.baseCount * (width / 1280 + 0.4));
         this.nodes = Array.from({ length: nodeCount }, () => this.createNode(width, height));
+    }
+
+    syncNodeCount(targetCount, width, height) {
+        if (!Number.isFinite(targetCount) || targetCount <= 0) {
+            return;
+        }
+
+        const current = this.nodes.length;
+        if (current < targetCount) {
+            for (let i = current; i < targetCount; i += 1) {
+                this.nodes.push(this.createNode(width, height));
+            }
+        } else if (current > targetCount) {
+            this.nodes.length = targetCount;
+        }
+    }
+
+    applyHeroPointerInfluence(width, height) {
+        if (this.pointer.active) {
+            return;
+        }
+
+        const targetX = width * 0.5 + (Number.isFinite(this.heroContext.pointerShift) ? this.heroContext.pointerShift * 0.6 : 0);
+        const targetY = height * (0.48 - this.heroContext.focus * 0.12);
+        this.pointer.x += (targetX - this.pointer.x) * 0.06;
+        this.pointer.y += (targetY - this.pointer.y) * 0.06;
     }
 
     createNode(width, height) {
@@ -108,10 +156,73 @@ export class PolytopalFieldVisualizer {
         ];
     }
 
+    handleVisualStateUpdate(event) {
+        const detail = event?.detail;
+        if (!detail) return;
+
+        const state = detail.state || {};
+        const multipliers = detail.multipliers || {};
+        const context = detail.context || {};
+
+        const intensity = Number.isFinite(state.intensity) ? state.intensity : 0.6;
+        const chaos = Number.isFinite(state.chaos) ? state.chaos : 0.2;
+        const speed = Number.isFinite(state.speed) ? state.speed : 0.5;
+        const hue = Number.isFinite(state.hue) ? state.hue : this.orchestratorColor.h;
+
+        const energy = Number.isFinite(context.heroEnergy)
+            ? context.heroEnergy
+            : (Number.isFinite(context.userEnergy) ? context.userEnergy : this.heroContext.energy);
+        const focus = Number.isFinite(context.heroFocus) ? context.heroFocus : this.heroContext.focus;
+        const pointerShift = Number.isFinite(context.heroPointerShift)
+            ? context.heroPointerShift
+            : this.heroContext.pointerShift;
+        const scrollVelocity = Number.isFinite(context.scrollVelocity) ? context.scrollVelocity : 0;
+
+        this.dynamicState.targetDensity = this.clamp(0.72 + intensity * 0.9 + focus * 0.3, 0.35, 2.6);
+        this.dynamicState.targetVelocity = this.clamp(0.7 + speed * 0.6 + chaos * 0.4 + scrollVelocity * 0.18, 0.35, 2.8);
+        this.dynamicState.targetConnection = this.clamp(0.82 + (1 - chaos) * 0.5 + focus * 0.25, 0.5, 2.4);
+
+        this.heroContext = {
+            focus: Math.max(0, Math.min(1, focus)),
+            pointerShift,
+            energy: Math.max(0, Math.min(1, energy))
+        };
+
+        const mouseActivity = Number.isFinite(multipliers.mouseActivity) ? multipliers.mouseActivity : 1;
+        const saturation = Math.min(1, 0.55 + intensity * 0.35 + energy * 0.25 + (mouseActivity - 1) * 0.1);
+        const value = Math.min(1, 0.58 + energy * 0.35 + scrollVelocity * 0.08);
+
+        this.orchestratorColor = { h: hue, s: saturation, v: value };
+    }
+
     updateNodes(deltaTime) {
         const canvasData = this.canvasManager.getCanvas(this.canvasId);
         const width = canvasData.canvas.width / (window.devicePixelRatio || 1);
         const height = canvasData.canvas.height / (window.devicePixelRatio || 1);
+
+        const dt = Number.isFinite(deltaTime) ? deltaTime : 16;
+        const smoothing = 1 - Math.exp(-dt / 420);
+        this.dynamicState.density += (this.dynamicState.targetDensity - this.dynamicState.density) * smoothing;
+        this.dynamicState.velocity += (this.dynamicState.targetVelocity - this.dynamicState.velocity) * smoothing;
+        this.dynamicState.connection += (this.dynamicState.targetConnection - this.dynamicState.connection) * smoothing;
+
+        const densityFactor = this.dynamicState.density;
+        const velocityScale = this.dynamicState.velocity;
+        const connectionScale = this.dynamicState.connection;
+
+        this.settings.maxVelocity = this.baseSettings.maxVelocity * velocityScale;
+        this.settings.connectionDistance = this.baseSettings.connectionDistance * connectionScale;
+
+        const targetNodeCount = Math.max(24, Math.round(this.baseSettings.baseCount * densityFactor));
+        this.syncNodeCount(targetNodeCount, width, height);
+
+        this.applyHeroPointerInfluence(width, height);
+
+        const heroEnergy = Math.max(0, Math.min(1, this.heroContext.energy));
+        const frameFactor = dt / 16;
+        const pointerStrength = this.settings.enablePointerInteraction
+            ? Math.max(this.pointer.active ? 1 : 0, this.heroContext.focus)
+            : 0;
 
         this.nodes.forEach((node) => {
             // Update position
@@ -120,7 +231,7 @@ export class PolytopalFieldVisualizer {
             node.z += node.vz;
 
             // Update phase for orbital effects
-            node.phase += 0.01;
+            node.phase += 0.01 * velocityScale;
 
             // Wrap around edges
             if (node.x < -50) node.x = width + 50;
@@ -130,12 +241,17 @@ export class PolytopalFieldVisualizer {
             if (node.z < 0) node.z = 100;
             if (node.z > 100) node.z = 0;
 
-            // Pointer interaction
-            if (this.pointer.active && this.settings.enablePointerInteraction) {
+            // Organic drift based on hero energy
+            const driftScale = heroEnergy * 0.012 * velocityScale * frameFactor;
+            node.vx += (Math.random() - 0.5) * driftScale;
+            node.vy += (Math.random() - 0.5) * driftScale;
+
+            // Pointer interaction blending hero focus
+            if (pointerStrength > 0) {
                 const dx = this.pointer.x - node.x;
                 const dy = this.pointer.y - node.y;
                 const distSq = dx * dx + dy * dy + 0.001;
-                const influence = Math.min(0.45, 1200 / distSq);
+                const influence = Math.min(0.45, 1200 / distSq) * pointerStrength * frameFactor;
                 node.vx += dx * influence * 0.00035;
                 node.vy += dy * influence * 0.00035;
             }
@@ -152,6 +268,9 @@ export class PolytopalFieldVisualizer {
         const maxDistance = this.settings.connectionDistance * (width < 768 ? 0.75 : 1);
 
         const { primary, secondary } = this.getColors();
+        const pointerStrength = this.settings.enablePointerInteraction
+            ? Math.max(this.pointer.active ? 1 : 0, this.heroContext.focus)
+            : 0;
 
         for (let i = 0; i < this.nodes.length; i++) {
             const nodeA = this.nodes[i];
@@ -178,14 +297,14 @@ export class PolytopalFieldVisualizer {
             }
 
             // Pointer connections
-            if (this.pointer.active && this.settings.enablePointerInteraction) {
+            if (pointerStrength > 0) {
                 const dxPointer = nodeA.x - this.pointer.x;
                 const dyPointer = nodeA.y - this.pointer.y;
                 const pointerDistance = Math.hypot(dxPointer, dyPointer);
                 const pointerThreshold = maxDistance * 1.1;
 
                 if (pointerDistance < pointerThreshold) {
-                    const alpha = (1 - pointerDistance / pointerThreshold) * 0.6;
+                    const alpha = (1 - pointerDistance / pointerThreshold) * 0.6 * pointerStrength;
                     this.ctx.strokeStyle = `rgba(${secondary}, ${alpha})`;
                     this.ctx.lineWidth = 0.8;
                     this.ctx.beginPath();
@@ -225,12 +344,15 @@ export class PolytopalFieldVisualizer {
         });
 
         // Pointer glow effect
-        if (this.pointer.active && this.settings.enablePointerInteraction) {
+        const pointerStrength = this.settings.enablePointerInteraction
+            ? Math.max(this.pointer.active ? 1 : 0, this.heroContext.focus)
+            : 0;
+        if (pointerStrength > 0.02) {
             const pointerGradient = this.ctx.createRadialGradient(
                 this.pointer.x, this.pointer.y, 0,
                 this.pointer.x, this.pointer.y, 120
             );
-            pointerGradient.addColorStop(0, `rgba(${secondary}, 0.25)`);
+            pointerGradient.addColorStop(0, `rgba(${secondary}, ${0.25 * pointerStrength})`);
             pointerGradient.addColorStop(1, `rgba(${secondary}, 0)`);
             this.ctx.fillStyle = pointerGradient;
             this.ctx.beginPath();
@@ -266,30 +388,63 @@ export class PolytopalFieldVisualizer {
     }
 
     getColors() {
-        const schemes = {
-            'cyan-magenta': {
-                primary: '0, 212, 255',     // Cyan
-                secondary: '255, 0, 110'     // Magenta
-            },
-            'purple': {
-                primary: '138, 43, 226',     // Blue Violet
-                secondary: '255, 20, 147'    // Deep Pink
-            },
-            'green': {
-                primary: '0, 255, 127',      // Spring Green
-                secondary: '50, 205, 50'     // Lime Green
-            },
-            'gold': {
-                primary: '255, 215, 0',      // Gold
-                secondary: '255, 140, 0'     // Dark Orange
-            }
+        const paletteOffsets = {
+            'cyan-magenta': [0, 130],
+            'purple': [30, 180],
+            'green': [120, -90],
+            'gold': [48, 210]
         };
 
-        return schemes[this.settings.colorScheme] || schemes['cyan-magenta'];
+        const offsets = paletteOffsets[this.settings.colorScheme] || paletteOffsets['cyan-magenta'];
+        const baseHue = this.orchestratorColor.h;
+        const saturation = this.orchestratorColor.s;
+        const value = this.orchestratorColor.v;
+
+        const primaryHue = (baseHue + offsets[0] + 360) % 360;
+        const secondaryHue = (baseHue + offsets[1] + 360) % 360;
+
+        const primaryRGB = this.hsvToRgb(primaryHue, saturation, value);
+        const secondaryRGB = this.hsvToRgb(secondaryHue, Math.min(1, saturation * 0.9 + 0.1), Math.min(1, value * 0.92 + 0.05));
+
+        return {
+            primary: primaryRGB.join(', '),
+            secondary: secondaryRGB.join(', ')
+        };
     }
 
     clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
+    }
+
+    hsvToRgb(h, s, v) {
+        const hue = ((h % 360) + 360) % 360;
+        const sat = Math.min(1, Math.max(0, s));
+        const val = Math.min(1, Math.max(0, v));
+
+        const c = val * sat;
+        const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+        const m = val - c;
+
+        let r1 = 0;
+        let g1 = 0;
+        let b1 = 0;
+
+        if (hue < 60) {
+            r1 = c; g1 = x; b1 = 0;
+        } else if (hue < 120) {
+            r1 = x; g1 = c; b1 = 0;
+        } else if (hue < 180) {
+            r1 = 0; g1 = c; b1 = x;
+        } else if (hue < 240) {
+            r1 = 0; g1 = x; b1 = c;
+        } else if (hue < 300) {
+            r1 = x; g1 = 0; b1 = c;
+        } else {
+            r1 = c; g1 = 0; b1 = x;
+        }
+
+        const to255 = (value) => Math.round((value + m) * 255);
+        return [to255(r1), to255(g1), to255(b1)];
     }
 
     dispose() {
@@ -299,6 +454,8 @@ export class PolytopalFieldVisualizer {
                 window.removeEventListener(type, handler);
             });
         }
+
+        window.removeEventListener('visualStateUpdate', this.handleVisualStateUpdate);
 
         // Clear canvas
         if (this.ctx) {
