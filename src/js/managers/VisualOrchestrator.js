@@ -5,9 +5,13 @@
  */
 
 export class VisualOrchestrator {
-    constructor(canvasManager) {
+    constructor(canvasManager, visualizerSystems = {}) {
         this.manager = canvasManager;
-        
+
+        // Visualizer systems (quantum, holographic, faceted)
+        this.systems = visualizerSystems;
+        this.activeSystem = 'quantum'; // Default
+
         // State tracking
         this.state = {
             scroll: 0,
@@ -40,9 +44,10 @@ export class VisualOrchestrator {
         this.visualState = { ...this.visualTarget };
         this.activeSectionElement = null;
         
-        // Section-based visual profiles WITH FORMS
+        // Section-based visual profiles WITH SYSTEM ASSIGNMENT
         this.sectionProfiles = {
             hero: {
+                system: 'quantum',         // Use Quantum System
                 preset: 'quantum',
                 form: 'lattice',           // Quantum 4D lattice structure
                 intensity: 0.6,
@@ -54,6 +59,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             capabilities: {
+                system: 'holographic',     // Use Holographic System (5 layers)
                 preset: 'crystal',
                 form: 'crystal',           // Sharp crystalline structures
                 intensity: 0.65,
@@ -65,6 +71,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             research: {
+                system: 'faceted',         // Use Faceted System (2D with 4D rotation)
                 preset: 'cosmic',
                 form: 'nebula',            // Organic nebula clouds
                 intensity: 0.7,
@@ -76,6 +83,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             platforms: {
+                system: 'quantum',         // Use Quantum System
                 preset: 'cyber',
                 form: 'vortex',            // Swirling vortex/spiral
                 intensity: 0.8,
@@ -87,6 +95,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             engagement: {
+                system: 'holographic',     // Use Holographic System
                 preset: 'neural',
                 form: 'pulse',             // Engagement wave choreography
                 intensity: 0.75,
@@ -98,6 +107,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             legacy: {
+                system: 'faceted',         // Use Faceted System
                 preset: 'heritage',
                 form: 'strata',            // Layered maritime memory
                 intensity: 0.6,
@@ -109,6 +119,7 @@ export class VisualOrchestrator {
                 formMix: 1.0
             },
             contact: {
+                system: 'quantum',         // Use Quantum System
                 preset: 'aurora',
                 form: 'fractal',           // Fractal branching patterns
                 intensity: 0.55,
@@ -268,6 +279,11 @@ export class VisualOrchestrator {
 
         const profile = this.sectionProfiles[sectionId] || this.sectionProfiles.hero;
 
+        // Switch visualizer system if needed
+        if (profile.system && profile.system !== this.activeSystem) {
+            this.switchVisualizerSystem(profile.system);
+        }
+
         // Set new visual target
         Object.assign(this.visualTarget, profile);
         this.updateSectionCss(sectionId, profile);
@@ -279,6 +295,32 @@ export class VisualOrchestrator {
         window.dispatchEvent(new CustomEvent('sectionTransition', {
             detail: { section: sectionId, profile, previousSection }
         }));
+    }
+
+    /**
+     * Switch between Quantum, Holographic, and Faceted visualizer systems
+     */
+    switchVisualizerSystem(newSystem) {
+        if (!this.systems[newSystem]) {
+            console.warn(`⚠️ Visualizer system not found: ${newSystem}`);
+            return;
+        }
+
+        console.log(`🔄 Switching from ${this.activeSystem} → ${newSystem}`);
+
+        // Deactivate current system
+        if (this.systems[this.activeSystem] && this.systems[this.activeSystem].setActive) {
+            this.systems[this.activeSystem].setActive(false);
+        }
+
+        // Activate new system
+        if (this.systems[newSystem] && this.systems[newSystem].setActive) {
+            this.systems[newSystem].setActive(true);
+        }
+
+        this.activeSystem = newSystem;
+
+        console.log(`✅ System switched to: ${newSystem}`);
     }
 
     manageVisualizerLifecycle(currentSection, previousSection) {

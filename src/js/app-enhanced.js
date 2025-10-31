@@ -9,6 +9,8 @@
 import { CanvasManager } from './managers/CanvasManager.js';
 import { VisualOrchestrator } from './managers/VisualOrchestrator.js';
 import { EnhancedQuantumBackground } from './visualizers/EnhancedQuantumBackground.js';
+import { HolographicSystem } from './visualizers/HolographicSystem.js';
+import { FacetedSystem } from './visualizers/FacetedSystem.js';
 import { ParticleNetworkSystem } from './visualizers/ParticleNetwork.js';
 import { PolytopalFieldVisualizer } from './visualizers/PolytopalFieldVisualizer.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
@@ -92,11 +94,7 @@ class ClearSeasEnhancedApplication {
                 bgCanvas.options.autoResize = true;
             }
 
-            // Initialize ORCHESTRATOR
-            this.logger.info('🎭 Initializing Visual Orchestrator...');
-            this.orchestrator = new VisualOrchestrator(this.canvasManager);
-
-            // Initialize Polytopal Field Visualizer (Primary)
+            // Initialize Polytopal Field Visualizer (Primary - Always Active)
             this.logger.info('✨ Initializing Polytopal Field Visualizer...');
             this.polytopalField = new PolytopalFieldVisualizer(
                 this.canvasManager,
@@ -113,15 +111,43 @@ class ClearSeasEnhancedApplication {
             );
             this.polytopalField.initialize();
 
-            // Initialize Enhanced Quantum Background (Secondary)
+            // Initialize THREE VISUALIZER SYSTEMS (switched by VisualOrchestrator)
+
+            // 1. Quantum System (Enhanced Quantum Background)
             if (bgCanvas) {
-                this.logger.info('🌠 Initializing Enhanced Quantum Background...');
-                this.quantumBackground = new EnhancedQuantumBackground(
+                this.logger.info('🌌 Initializing Quantum System...');
+                this.quantumSystem = new EnhancedQuantumBackground(
                     this.canvasManager,
                     'quantum-background'
                 );
-                this.quantumBackground.initialize();
+                this.quantumSystem.initialize();
             }
+
+            // 2. Holographic System (5-layer audio-reactive)
+            this.logger.info('🎨 Initializing Holographic System...');
+            this.holographicSystem = new HolographicSystem(
+                this.canvasManager,
+                'quantum-background' // Reuses quantum-background container
+            );
+            this.holographicSystem.initialize();
+            this.holographicSystem.setActive(false); // Start inactive
+
+            // 3. Faceted System (2D patterns with 4D rotation)
+            this.logger.info('🔷 Initializing Faceted System...');
+            this.facetedSystem = new FacetedSystem(
+                this.canvasManager,
+                'quantum-background' // Reuses quantum-background canvas
+            );
+            this.facetedSystem.initialize();
+            this.facetedSystem.setActive(false); // Start inactive
+
+            // Initialize ORCHESTRATOR with visualizer systems
+            this.logger.info('🎭 Initializing Visual Orchestrator...');
+            this.orchestrator = new VisualOrchestrator(this.canvasManager, {
+                quantum: this.quantumSystem,
+                holographic: this.holographicSystem,
+                faceted: this.facetedSystem
+            });
 
             // Initialize Card Fractal System
             this.logger.info('🔮 Initializing Card Fractal System...');
@@ -425,8 +451,17 @@ class ClearSeasEnhancedApplication {
             this.polytopalField.dispose();
         }
 
-        if (this.quantumBackground) {
-            this.quantumBackground.dispose();
+        // Dispose all three visualizer systems
+        if (this.quantumSystem) {
+            this.quantumSystem.dispose();
+        }
+
+        if (this.holographicSystem) {
+            this.holographicSystem.dispose();
+        }
+
+        if (this.facetedSystem) {
+            this.facetedSystem.dispose();
         }
 
         this.particleNetworks.forEach(network => network.dispose());
