@@ -50,7 +50,22 @@
     return value;
   };
 
+  const clamp = (value, min, max) => {
+    if (!Number.isFinite(value)) {
+      return min;
+    }
+    if (value < min) {
+      return min;
+    }
+    if (value > max) {
+      return max;
+    }
+    return value;
+  };
+
   const floatEquals = (a, b, epsilon = 0.0005) => Math.abs(a - b) <= epsilon;
+
+  const SECTION_GLYPHS = ['✶', '✦', '◬', '☄', '✹'];
 
   const createFrameScheduler = () => {
     let rafId = null;
@@ -118,6 +133,7 @@
   let detachPolytopalListener = null;
   let teardownHeroBridge = null;
   let heroBridge = null;
+  let detachVisualStateListener = null;
   let heroBridgeActive = false;
   let stopLenis = null;
   let releaseSchedulerState = null;
@@ -352,6 +368,27 @@
         driftY: ''
       }
     };
+    const moireDynamic = {
+      shift: 0,
+      rotation: 0,
+      scale: 0,
+      opacity: 0,
+      driftX: 0,
+      driftY: 0
+    };
+    const orchestratorMoire = {
+      current: { shift: 0, rotation: 0, scale: 0, opacity: 0, driftX: 0, driftY: 0 },
+      target: { shift: 0, rotation: 0, scale: 0, opacity: 0, driftX: 0, driftY: 0 },
+      active: false
+    };
+    const orchestratorMoireThreshold = {
+      shift: 0.6,
+      rotation: 0.05,
+      scale: 0.01,
+      opacity: 0.01,
+      driftX: 1.2,
+      driftY: 1.2
+    };
     const heroFocusProxy = { base: 0, pointer: 0 };
     const heroFocusCommit = { active: false, lastTotal: NaN, lastBase: NaN, lastPointer: NaN };
     const pointerBridgeCache = { focus: NaN, shift: NaN };
@@ -482,33 +519,37 @@
 
     const commitMoireState = () => {
       moireCommit.active = false;
-      const totalShift = moireProxy.baseShift + moireProxy.pointerShift;
+      const totalShift = moireProxy.baseShift + moireProxy.pointerShift + moireDynamic.shift;
       const shiftValue = `${totalShift.toFixed(2)}px`;
       if (moireCommit.last.shift !== shiftValue) {
         rootStyle.set('--moire-shift', shiftValue);
         moireCommit.last.shift = shiftValue;
       }
-      const rotationValue = `${moireProxy.rotation.toFixed(3)}deg`;
+      const rotationValue = `${(moireProxy.rotation + moireDynamic.rotation).toFixed(3)}deg`;
       if (moireCommit.last.rotation !== rotationValue) {
         rootStyle.set('--moire-rotation', rotationValue);
         moireCommit.last.rotation = rotationValue;
       }
-      const scaleValue = moireProxy.scale.toFixed(4);
+      const combinedScale = clamp(moireProxy.scale + moireDynamic.scale, 0.85, 1.45);
+      const scaleValue = combinedScale.toFixed(4);
       if (moireCommit.last.scale !== scaleValue) {
         rootStyle.set('--moire-scale', scaleValue);
         moireCommit.last.scale = scaleValue;
       }
-      const opacityValue = moireProxy.opacity.toFixed(3);
+      const combinedOpacity = clamp(moireProxy.opacity + moireDynamic.opacity, 0, 1);
+      const opacityValue = combinedOpacity.toFixed(3);
       if (moireCommit.last.opacity !== opacityValue) {
         rootStyle.set('--moire-opacity', opacityValue);
         moireCommit.last.opacity = opacityValue;
       }
-      const driftXValue = `${moireProxy.driftX.toFixed(2)}px`;
+      const driftXCombined = clamp(moireProxy.driftX + moireDynamic.driftX, -160, 160);
+      const driftXValue = `${driftXCombined.toFixed(2)}px`;
       if (moireCommit.last.driftX !== driftXValue) {
         rootStyle.set('--moire-drift-x', driftXValue);
         moireCommit.last.driftX = driftXValue;
       }
-      const driftYValue = `${moireProxy.driftY.toFixed(2)}px`;
+      const driftYCombined = clamp(moireProxy.driftY + moireDynamic.driftY, -160, 160);
+      const driftYValue = `${driftYCombined.toFixed(2)}px`;
       if (moireCommit.last.driftY !== driftYValue) {
         rootStyle.set('--moire-drift-y', driftYValue);
         moireCommit.last.driftY = driftYValue;
@@ -522,16 +563,184 @@
       }
     };
 
+    const updateOrchestratorMoire = () => {
+      orchestratorMoire.active = false;
+
+      Object.keys(orchestratorMoire.current).forEach((key) => {
+        orchestratorMoire.current[key] = orchestratorMoire.target[key];
+      });
+
+      Object.assign(moireDynamic, orchestratorMoire.current);
+      applyMoireState();
+    };
+
+    const queueOrchestratorMoire = () => {
+      if (!orchestratorMoire.active) {
+        orchestratorMoire.active = true;
+        frameScheduler.schedule(updateOrchestratorMoire);
+      }
+    };
+
+    const targetOrchestratorMoire = (values) => {
+      Object.assign(orchestratorMoire.target, values);
+      queueOrchestratorMoire();
+    };
+
+    const handleVisualStateUpdate = (event) => {
+      const detail = event?.detail;
+      if (!detail || !detail.state) {
+        return;
+      }
+
+      const resetTargets = body.classList.contains('scroll-choreo-reduced');
+
+      if (resetTargets) {
+        targetOrchestratorMoire({
+          shift: 0,
+          rotation: 0,
+          scale: 0,
+          opacity: 0,
+          driftX: 0,
+          driftY: 0
+        });
+        return;
+      }
+
+      const { state, context } = detail;
+      const scrollProgress = clamp(context?.scroll ?? 0, 0, 1);
+      const energy = clamp(context?.userEnergy ?? 0, 0, 1);
+      const mouseActivity = clamp(context?.mouseActivity ?? 0, 0, 1);
+      const scrollVelocity = clamp(context?.scrollVelocity ?? 0, 0, 2);
+      const hoveredCards = Math.max(0, context?.hoveredCards ?? 0);
+      const sectionDepth = clamp(context?.sectionDepth ?? 0, 0, 1);
+      const activeSection = context?.section || 'hero';
+      const sectionProfile = context?.sectionProfile || activeSection;
+      const heroDepth = activeSection === 'hero' ? sectionDepth : 0;
+
+      const accentHue = Number.isFinite(context?.sectionHue)
+        ? context.sectionHue
+        : Number.isFinite(state?.hue)
+          ? state.hue
+          : 180;
+      const accentChroma = clamp(context?.sectionChroma ?? 0.62, 0, 1);
+      const accentLuminance = clamp(context?.sectionLuminance ?? 0.6, 0, 1);
+      const accentPulse = clamp(context?.sectionPulse ?? energy, 0, 1);
+      const accentRipple = clamp(context?.sectionRipple ?? sectionDepth, 0, 1);
+      const accentTimeline = context?.sectionTimeline ?? 0;
+      const accentGlyph = Number.isFinite(context?.sectionGlyph) ? context.sectionGlyph : 0;
+      const glyphIndex = Math.max(0, Math.min(SECTION_GLYPHS.length - 1, Math.round(accentGlyph)));
+      const glyphSymbol = typeof context?.sectionGlyphSymbol === 'string' && context.sectionGlyphSymbol.trim()
+        ? context.sectionGlyphSymbol.trim()
+        : SECTION_GLYPHS[glyphIndex] || SECTION_GLYPHS[0];
+
+      if (document?.body) {
+        document.body.dataset.visualSection = sectionProfile;
+        document.body.dataset.visualSectionRaw = activeSection;
+        document.body.dataset.visualSectionGlyph = glyphSymbol;
+      }
+
+      const hueNumber = ((accentHue % 360) + 360) % 360;
+      const hueValue = `${hueNumber.toFixed(2)}deg`;
+      const saturationPercent = `${(accentChroma * 100).toFixed(1)}%`;
+      const luminancePercent = `${(accentLuminance * 100).toFixed(1)}%`;
+      const beaconColor = `hsl(${hueNumber.toFixed(2)}, ${(accentChroma * 100).toFixed(1)}%, ${(accentLuminance * 100).toFixed(1)}%)`;
+      const haloLight = Math.min(100, accentLuminance * 100 + 12).toFixed(1);
+      const haloAlpha = clamp(0.22 + accentRipple * 0.48, 0, 0.9).toFixed(3);
+      const beaconHalo = `hsla(${hueNumber.toFixed(2)}, ${(accentChroma * 100).toFixed(1)}%, ${haloLight}%, ${haloAlpha})`;
+      const intensity = clamp(0.28 + accentPulse * 0.72, 0, 1).toFixed(3);
+
+      rootStyle.set('--visual-beacon-hue', hueValue);
+      rootStyle.set('--visual-beacon-sat', saturationPercent);
+      rootStyle.set('--visual-beacon-light', luminancePercent);
+      rootStyle.set('--visual-beacon-color', beaconColor);
+      rootStyle.set('--visual-beacon-halo', beaconHalo);
+      rootStyle.set('--visual-beacon-intensity', intensity);
+      rootStyle.set('--visual-event-pulse', accentPulse.toFixed(3));
+      rootStyle.set('--visual-event-ripple', accentRipple.toFixed(3));
+      const timelinePhase = ((accentTimeline % 1) + 1) % 1;
+      rootStyle.set('--visual-event-timeline', timelinePhase.toFixed(3));
+
+      if (heroBridgeActive) {
+        heroBridgeUpdate({
+          sectionHue: hueNumber,
+          sectionPulse: accentPulse,
+          sectionRipple: accentRipple,
+          sectionGlyph: glyphIndex,
+          sectionGlyphSymbol: glyphSymbol
+        });
+      }
+
+      const depthGain = heroDepth * 0.5;
+      const opacityTarget = clamp(state.moireIntensity * 0.5 + energy * 0.11 + depthGain * 0.08, 0, 0.32);
+      const rotationTarget = clamp((state.chaos - 0.25) * 8 + heroDepth * 1.6, -3.8, 3.8);
+      const scaleTarget = clamp((state.intensity - 0.5) * 0.16 + heroDepth * 0.12, -0.08, 0.18);
+      const shiftTarget = clamp((scrollProgress - 0.5) * 48 + scrollVelocity * 9 - heroDepth * 6, -32, 32);
+      const driftXTarget = clamp((mouseActivity - 0.5) * 40 + hoveredCards * 2.8, -28, 32);
+      const driftYTarget = clamp((energy - 0.5) * -36 - heroDepth * 12, -26, 22);
+
+      const proposedTargets = {
+        shift: shiftTarget,
+        rotation: rotationTarget,
+        scale: scaleTarget,
+        opacity: opacityTarget,
+        driftX: driftXTarget,
+        driftY: driftYTarget
+      };
+
+      const currentOpacityTarget = orchestratorMoire.target.opacity;
+      if (proposedTargets.opacity > currentOpacityTarget) {
+        proposedTargets.opacity = Math.max(
+          proposedTargets.opacity,
+          currentOpacityTarget + 0.018
+        );
+      } else if (proposedTargets.opacity < currentOpacityTarget) {
+        proposedTargets.opacity = Math.max(
+          proposedTargets.opacity,
+          currentOpacityTarget - 0.006
+        );
+      }
+
+      const requiresUpdate = Object.keys(proposedTargets).some((key) => {
+        const currentTarget = orchestratorMoire.target[key];
+        const nextValue = proposedTargets[key];
+        const threshold = orchestratorMoireThreshold[key] ?? 0.1;
+        return Math.abs(nextValue - currentTarget) > threshold;
+      });
+
+      if (requiresUpdate) {
+        targetOrchestratorMoire(proposedTargets);
+      }
+    };
+
     const resetMoireState = () => {
       moireProxy.baseShift = 0;
       moireProxy.pointerShift = 0;
       moireProxy.rotation = 0;
       moireProxy.scale = 1;
-      moireProxy.opacity = 0.35;
+      moireProxy.opacity = 0.3;
       moireProxy.driftX = 0;
       moireProxy.driftY = 0;
       heroFocusProxy.base = 0;
       heroFocusProxy.pointer = 0;
+      Object.assign(moireDynamic, {
+        shift: 0,
+        rotation: 0,
+        scale: 0,
+        opacity: 0,
+        driftX: 0,
+        driftY: 0
+      });
+      Object.assign(orchestratorMoire.current, {
+        shift: 0,
+        rotation: 0,
+        scale: 0,
+        opacity: 0,
+        driftX: 0,
+        driftY: 0
+      });
+      Object.assign(orchestratorMoire.target, orchestratorMoire.current);
+      orchestratorMoire.active = false;
+      frameScheduler.cancel(updateOrchestratorMoire);
       applyMoireState();
       applyHeroFocus();
     };
@@ -539,6 +748,16 @@
     setHeroPhase('intro');
     resetMoireState();
     setMorphProgress(0);
+
+    if (detachVisualStateListener) {
+      detachVisualStateListener();
+    }
+    window.addEventListener('visualStateUpdate', handleVisualStateUpdate);
+    detachVisualStateListener = () => {
+      window.removeEventListener('visualStateUpdate', handleVisualStateUpdate);
+      detachVisualStateListener = null;
+    };
+
     if (polytopalController && typeof polytopalController.setPreset === 'function') {
       polytopalController.setPreset('stable');
     }
@@ -645,6 +864,22 @@
       frameScheduler.cancel(updatePointerEffects);
       frameScheduler.cancel(commitHeroFocus);
       frameScheduler.cancel(commitMoireState);
+      frameScheduler.cancel(updateOrchestratorMoire);
+      orchestratorMoire.active = false;
+      Object.assign(moireDynamic, {
+        shift: 0,
+        rotation: 0,
+        scale: 0,
+        opacity: 0,
+        driftX: 0,
+        driftY: 0
+      });
+      Object.assign(orchestratorMoire.current, moireDynamic);
+      Object.assign(orchestratorMoire.target, moireDynamic);
+      if (detachVisualStateListener) {
+        detachVisualStateListener();
+      }
+      applyMoireState();
     };
 
     const handleMouseOut = (event) => {

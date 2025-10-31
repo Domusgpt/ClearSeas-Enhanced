@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "npx http-server -p 8000 -c-1",
     "serve": "python -m http.server 8000",
-    "start": "npm run dev"
+    "start": "npm run dev",
+    "test:playwright": "node tests/playwright/run-hero-visuals.mjs"
   },
   "keywords": [
     "visualization",
@@ -25,6 +26,7 @@
     "url": "git+https://github.com/yourusername/ClearSeas-Enhanced.git"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.1",
     "http-server": "^14.1.1"
   },
   "engines": {
