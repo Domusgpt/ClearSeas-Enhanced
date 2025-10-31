@@ -389,14 +389,22 @@ class ClearSeasEnhancedApplication {
 
         const container = document.getElementById('polytopal-field');
         if (container) {
-            // Draw static gradient fallback
-            const canvas = container.querySelector('canvas');
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
+            // Create a fallback canvas
+            let canvas = container.querySelector('canvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                container.appendChild(canvas);
+            }
+
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
                 const width = window.innerWidth;
                 const height = window.innerHeight;
                 canvas.width = width;
                 canvas.height = height;
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+
                 const gradient = ctx.createLinearGradient(0, 0, width, height);
                 gradient.addColorStop(0, 'rgba(0, 212, 255, 0.08)');
                 gradient.addColorStop(1, 'rgba(255, 0, 110, 0.05)');

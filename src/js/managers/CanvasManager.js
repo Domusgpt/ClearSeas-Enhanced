@@ -34,7 +34,7 @@ export class CanvasManager {
     }
     
     /**
-     * Create and register a canvas with WebGL context
+     * Create and register a canvas with WebGL or 2D context
      */
     createCanvas(id, options = {}) {
         const {
@@ -49,13 +49,13 @@ export class CanvasManager {
             dpr = Math.min(window.devicePixelRatio || 1, 2),
             webgl2 = true
         } = options;
-        
+
         // Check if already exists
         if (this.canvases.has(id)) {
             console.warn(`Canvas with id ${id} already exists`);
             return this.canvases.get(id);
         }
-        
+
         // Create canvas element
         const canvas = document.createElement('canvas');
         canvas.id = `canvas-${id}`;
@@ -63,7 +63,46 @@ export class CanvasManager {
         canvas.style.height = `${height}px`;
         canvas.width = width * dpr;
         canvas.height = height * dpr;
-        
+
+        let gl = null;
+        let ctx = null;
+
+        // If webgl2 is false, use 2D context
+        if (webgl2 === false) {
+            ctx = canvas.getContext('2d', { alpha });
+            if (!ctx) {
+                console.error('2D context not supported for canvas:', id);
+                return null;
+            }
+
+            // Store canvas data with 2D context
+            const canvasData = {
+                id,
+                canvas,
+                ctx,
+                gl: null,
+                dpr,
+                width,
+                height,
+                container,
+                options,
+                isActive: true,
+                lastRenderTime: 0,
+                renderCount: 0
+            };
+
+            this.canvases.set(id, canvasData);
+            this.contexts.set(id, ctx);
+
+            // Append to container
+            if (container) {
+                container.appendChild(canvas);
+            }
+
+            console.log(`✅ Canvas ${id} created (2D context)`);
+            return canvasData;
+        }
+
         // Try to get WebGL context
         const contextOptions = {
             alpha,
@@ -72,28 +111,27 @@ export class CanvasManager {
             preserveDrawingBuffer,
             powerPreference
         };
-        
-        let gl = null;
-        
+
         if (webgl2) {
             gl = canvas.getContext('webgl2', contextOptions);
         }
-        
+
         if (!gl) {
-            gl = canvas.getContext('webgl', contextOptions) || 
+            gl = canvas.getContext('webgl', contextOptions) ||
                  canvas.getContext('experimental-webgl', contextOptions);
         }
-        
+
         if (!gl) {
             console.error('WebGL not supported for canvas:', id);
             return null;
         }
-        
+
         // Store canvas data
         const canvasData = {
             id,
             canvas,
             gl,
+            ctx: null,
             dpr,
             width,
             height,
@@ -103,10 +141,10 @@ export class CanvasManager {
             lastRenderTime: 0,
             renderCount: 0
         };
-        
+
         this.canvases.set(id, canvasData);
         this.contexts.set(id, gl);
-        
+
         // Initialize performance metrics
         this.performanceMetrics.set(id, {
             fps: 60,
@@ -115,14 +153,14 @@ export class CanvasManager {
             triangles: 0,
             lastUpdate: performance.now()
         });
-        
+
         // Append to container if specified
         if (container) {
             container.appendChild(canvas);
         }
-        
+
         console.log(`✅ Canvas ${id} created (WebGL${gl instanceof WebGL2RenderingContext ? '2' : '1'})`);
-        
+
         return canvasData;
     }
     

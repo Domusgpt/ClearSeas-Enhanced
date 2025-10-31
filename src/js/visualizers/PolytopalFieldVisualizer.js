@@ -36,12 +36,18 @@ export class PolytopalFieldVisualizer {
             return;
         }
 
+        // Get 2D context from CanvasManager
         this.ctx = canvasData.ctx;
+        if (!this.ctx) {
+            console.error('PolytopalFieldVisualizer: Canvas does not have 2D context');
+            return;
+        }
+
         this.setupNodes();
         this.setupEventListeners();
 
-        // Register render callback
-        this.canvasManager.registerRenderCallback(this.canvasId, this.render.bind(this));
+        // Register render callback (correct method name is registerRenderer)
+        this.canvasManager.registerRenderer(this.canvasId, this.render.bind(this));
 
         this.isInitialized = true;
         console.log('✨ PolytopalFieldVisualizer initialized');
