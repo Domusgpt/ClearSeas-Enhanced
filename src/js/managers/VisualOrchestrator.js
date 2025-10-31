@@ -263,18 +263,54 @@ export class VisualOrchestrator {
     
     transitionToSection(sectionId) {
         console.log(`🎬 Transitioning to section: ${sectionId}`);
+        const previousSection = this.state.currentSection;
         this.state.currentSection = sectionId;
-        
+
         const profile = this.sectionProfiles[sectionId] || this.sectionProfiles.hero;
-        
+
         // Set new visual target
         Object.assign(this.visualTarget, profile);
         this.updateSectionCss(sectionId, profile);
-        
+
+        // Manage visualizer lifecycle
+        this.manageVisualizerLifecycle(sectionId, previousSection);
+
         // Dispatch event for other systems
         window.dispatchEvent(new CustomEvent('sectionTransition', {
-            detail: { section: sectionId, profile }
+            detail: { section: sectionId, profile, previousSection }
         }));
+    }
+
+    manageVisualizerLifecycle(currentSection, previousSection) {
+        // Get CanvasManager reference from window if available
+        const canvasManager = window.clearSeasApp?.canvasManager;
+        if (!canvasManager) return;
+
+        // Core visualizers always active (polytopal-field, quantum-background)
+        const coreCanvases = ['polytopal-field', 'quantum-background'];
+
+        // Section-specific particle networks
+        const sectionCanvases = {
+            'capabilities': 'particle-capabilities',
+            'research': 'particle-research',
+            'platforms': 'particle-platforms',
+            'engagement': 'particle-engagement',
+            'legacy': 'particle-legacy'
+        };
+
+        // Deactivate previous section's particles
+        if (previousSection && sectionCanvases[previousSection]) {
+            const canvasId = sectionCanvases[previousSection];
+            canvasManager.setCanvasActive(canvasId, false);
+            console.log(`⏸️ Paused: ${canvasId}`);
+        }
+
+        // Activate current section's particles
+        if (sectionCanvases[currentSection]) {
+            const canvasId = sectionCanvases[currentSection];
+            canvasManager.setCanvasActive(canvasId, true);
+            console.log(`▶️ Activated: ${canvasId}`);
+        }
     }
     
     updateSectionCss(sectionId, profile) {
