@@ -15,7 +15,23 @@ export class CardFractalSystem {
     
     init() {
         // Find all cards and prepare them
-        document.querySelectorAll('.card, .signal-card').forEach(card => {
+        const selectors = [
+            '.card',
+            '.signal-card',
+            '.capability-card',
+            '.platform-card',
+            '.engagement-steps .step',
+            '.legacy-signal',
+            '.contact-card',
+            '[data-fractal-card]'
+        ];
+
+        const cards = new Set();
+        selectors.forEach((selector) => {
+            document.querySelectorAll(selector).forEach((card) => cards.add(card));
+        });
+
+        cards.forEach(card => {
             this.prepareCard(card);
         });
         
@@ -23,8 +39,13 @@ export class CardFractalSystem {
     }
     
     prepareCard(card) {
+        if (!card || card.dataset.cardFractalReady === 'true') {
+            return;
+        }
+        
         const cardId = card.dataset.cardId || `card-${Math.random().toString(36).substr(2, 9)}`;
         card.dataset.cardId = cardId;
+        card.dataset.cardFractalReady = 'true';
         
         // Create canvas overlay for effects
         const overlay = document.createElement('div');
@@ -50,7 +71,9 @@ export class CardFractalSystem {
         `;
         
         overlay.appendChild(canvas);
-        card.style.position = 'relative';
+        if (window.getComputedStyle(card).position === 'static') {
+            card.style.position = 'relative';
+        }
         card.insertBefore(overlay, card.firstChild);
         
         const ctx = canvas.getContext('2d');

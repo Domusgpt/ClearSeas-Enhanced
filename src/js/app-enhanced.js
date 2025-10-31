@@ -132,9 +132,11 @@ class ClearSeasEnhancedApplication {
 
             // Setup UI interactions
             this.setupInteractions();
+            this.setupSectionBindings();
 
             // Start rendering
             this.canvasManager.start();
+            document.body.dataset.visualSystem = 'enhanced';
 
             this.isInitialized = true;
 
@@ -153,9 +155,11 @@ class ClearSeasEnhancedApplication {
     initializeParticleNetworks() {
         // Create particle networks for select sections
         const sections = [
-            { id: 'capabilities', colorScheme: 'purple', particleCount: 60 },
-            { id: 'research', colorScheme: 'cyan', particleCount: 60 },
-            { id: 'platforms', colorScheme: 'green', particleCount: 60 }
+            { id: 'capabilities', colorScheme: 'purple', particleCount: 60, connectionDistance: 0.14 },
+            { id: 'research', colorScheme: 'blue', particleCount: 60, connectionDistance: 0.16 },
+            { id: 'platforms', colorScheme: 'green', particleCount: 60, connectionDistance: 0.15 },
+            { id: 'engagement', colorScheme: 'magenta', particleCount: 48, connectionDistance: 0.18, opacity: 0.35 },
+            { id: 'legacy', colorScheme: 'orange', particleCount: 48, connectionDistance: 0.17, opacity: 0.32 }
         ];
 
         sections.forEach(section => {
@@ -172,9 +176,11 @@ class ClearSeasEnhancedApplication {
             container.style.height = '100%';
             container.style.pointerEvents = 'none';
             container.style.zIndex = '1';
-            container.style.opacity = '0.4';
+            container.style.opacity = String(section.opacity ?? 0.4);
 
-            element.style.position = 'relative';
+            if (window.getComputedStyle(element).position === 'static') {
+                element.style.position = 'relative';
+            }
             element.insertBefore(container, element.firstChild);
 
             // Create canvas
@@ -183,7 +189,8 @@ class ClearSeasEnhancedApplication {
                 width: element.offsetWidth,
                 height: element.offsetHeight,
                 alpha: true,
-                antialias: true
+                antialias: true,
+                autoResize: true
             });
 
             if (canvas) {
@@ -194,7 +201,7 @@ class ClearSeasEnhancedApplication {
                     {
                         particleCount: section.particleCount,
                         colorScheme: section.colorScheme,
-                        connectionDistance: 0.15,
+                        connectionDistance: section.connectionDistance ?? 0.15,
                         speed: 0.2
                     }
                 );
@@ -311,6 +318,35 @@ class ClearSeasEnhancedApplication {
         if (yearElement) {
             yearElement.textContent = new Date().getFullYear();
         }
+    }
+
+    setupSectionBindings() {
+        const navLinks = Array.from(document.querySelectorAll('.primary-navigation a'));
+        if (!navLinks.length) return;
+
+        const markActive = (section) => {
+            if (!section) return;
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (!href || !href.startsWith('#')) return;
+
+                const targetSection = href.slice(1);
+                const isActive = targetSection === section;
+                link.classList.toggle('is-active', isActive);
+                if (isActive) {
+                    link.setAttribute('aria-current', 'page');
+                } else {
+                    link.removeAttribute('aria-current');
+                }
+            });
+        };
+
+        window.addEventListener('sectionTransition', ({ detail }) => {
+            markActive(detail?.section);
+        });
+
+        markActive(document.body.dataset.activeSection || 'hero');
     }
 
     setupSectionObserver() {

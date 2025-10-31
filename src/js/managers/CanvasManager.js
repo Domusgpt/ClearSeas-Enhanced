@@ -376,6 +376,11 @@ export class CanvasManager {
             const scrollTop = window.pageYOffset;
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
             this.scrollProgress = docHeight > 0 ? scrollTop / docHeight : 0;
+            const root = document.documentElement;
+            if (root) {
+                root.style.setProperty('--scroll-progress', this.scrollProgress.toFixed(4));
+                root.style.setProperty('--scroll-y', `${scrollTop}`);
+            }
         }, { passive: true });
         
         // Viewport resize

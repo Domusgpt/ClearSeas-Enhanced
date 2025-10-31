@@ -31,7 +31,9 @@ export class ParticleNetworkSystem {
             purple: { h: 280, s: 0.7, v: 0.85 },
             green: { h: 120, s: 0.75, v: 0.8 },
             orange: { h: 30, s: 0.85, v: 0.9 },
-            blue: { h: 210, s: 0.8, v: 0.85 }
+            blue: { h: 210, s: 0.8, v: 0.85 },
+            magenta: { h: 320, s: 0.82, v: 0.92 },
+            teal: { h: 170, s: 0.75, v: 0.88 }
         };
     }
     

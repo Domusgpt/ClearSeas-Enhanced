@@ -94,6 +94,20 @@
   --theme-primary-light: #66e6ff;
   --theme-secondary-dark: #cc0055;
   --theme-secondary-light: #ff66a3;
+
+  /* Dynamic Visual Variables */
+  --visual-hue: 200deg;
+  --visual-intensity: 0.6;
+  --visual-chaos: 0.2;
+  --visual-speed: 0.6;
+  --visual-rgb-offset: 0.002;
+  --visual-moire: 0.1;
+  --visual-energy: 0.5;
+  --section-hue-target: 200deg;
+  --section-intensity-target: 0.6;
+  --scroll-progress: 0;
+  --scroll-velocity: 0;
+  --scroll-y: 0;
   
   /* Glassmorphism Effects */
   --glass-bg: rgba(255, 255, 255, 0.05);
@@ -163,13 +177,22 @@ body {
   line-height: var(--line-height-normal);
   color: var(--text-primary);
   background-color: var(--bg-primary);
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(255, 0, 110, 0.1) 0%, transparent 50%);
+  background-image:
+    radial-gradient(
+      circle at calc(20% + var(--scroll-progress) * 15%) calc(20% + var(--scroll-progress) * 10%),
+      hsla(var(--visual-hue), 85%, 60%, calc(0.05 + var(--visual-intensity) * 0.12)) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at calc(80% - var(--scroll-progress) * 15%) calc(78% - var(--scroll-progress) * 12%),
+      hsla(calc(var(--visual-hue) + 120deg), 80%, 58%, calc(0.03 + var(--visual-energy) * 0.1)) 0%,
+      transparent 60%
+    );
   background-attachment: fixed;
   overflow-x: hidden;
   position: relative;
-  transition: background-color var(--duration-slow) var(--ease-in-out);
+  transition: background-color var(--duration-slow) var(--ease-in-out),
+              background-image var(--duration-slower) var(--ease-in-out);
 }
 
 /* Loading State */
@@ -180,6 +203,28 @@ body.loading {
 body.loading * {
   animation-play-state: paused !important;
   transition: none !important;
+}
+
+section[data-section] {
+  transition:
+    opacity var(--duration-slower) var(--ease-in-out),
+    transform var(--duration-slower) var(--ease-in-out),
+    filter var(--duration-slower) var(--ease-in-out),
+    box-shadow var(--duration-slower) var(--ease-in-out);
+  scroll-margin-top: calc(var(--space-20) + 24px);
+}
+
+body[data-active-section] section[data-section] {
+  opacity: 0.85;
+  transform: translateY(18px);
+  filter: saturate(0.92);
+}
+
+section[data-section][data-section-active="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  filter: saturate(1.08);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== TYPOGRAPHY SYSTEM ===== */

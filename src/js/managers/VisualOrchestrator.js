@@ -38,6 +38,7 @@ export class VisualOrchestrator {
         
         // Current visual state (smooth interpolation)
         this.visualState = { ...this.visualTarget };
+        this.activeSectionElement = null;
         
         // Section-based visual profiles WITH FORMS
         this.sectionProfiles = {
@@ -50,17 +51,6 @@ export class VisualOrchestrator {
                 hue: 180,
                 rgbOffset: 0.002,
                 moireIntensity: 0.1,
-                formMix: 1.0
-            },
-            signals: {
-                preset: 'neural',
-                form: 'wave',              // Flowing wave patterns
-                intensity: 0.75,
-                chaos: 0.4,
-                speed: 0.8,
-                hue: 280,
-                rgbOffset: 0.005,
-                moireIntensity: 0.3,
                 formMix: 1.0
             },
             capabilities: {
@@ -96,6 +86,28 @@ export class VisualOrchestrator {
                 moireIntensity: 0.25,
                 formMix: 1.0
             },
+            engagement: {
+                preset: 'neural',
+                form: 'pulse',             // Engagement wave choreography
+                intensity: 0.75,
+                chaos: 0.4,
+                speed: 0.7,
+                hue: 300,
+                rgbOffset: 0.003,
+                moireIntensity: 0.3,
+                formMix: 1.0
+            },
+            legacy: {
+                preset: 'heritage',
+                form: 'strata',            // Layered maritime memory
+                intensity: 0.6,
+                chaos: 0.18,
+                speed: 0.45,
+                hue: 210,
+                rgbOffset: 0.002,
+                moireIntensity: 0.12,
+                formMix: 1.0
+            },
             contact: {
                 preset: 'aurora',
                 form: 'fractal',           // Fractal branching patterns
@@ -127,6 +139,8 @@ export class VisualOrchestrator {
     
     init() {
         this.setupListeners();
+        const initialProfile = this.sectionProfiles[this.state.currentSection] || this.sectionProfiles.hero;
+        this.updateSectionCss(this.state.currentSection, initialProfile);
         this.startOrchestration();
         console.log('🎭 Visual Orchestrator initialized - pure choreography mode');
     }
@@ -175,7 +189,22 @@ export class VisualOrchestrator {
         }, { passive: true });
         
         // Card hover detection
-        document.querySelectorAll('.card, .signal-card').forEach(card => {
+        const cardSelectors = [
+            '.card',
+            '.signal-card',
+            '.capability-card',
+            '.platform-card',
+            '.engagement-steps .step',
+            '.legacy-signal',
+            '.contact-card',
+            '[data-fractal-card]'
+        ];
+        const cards = new Set();
+        cardSelectors.forEach((selector) => {
+            document.querySelectorAll(selector).forEach((card) => cards.add(card));
+        });
+
+        cards.forEach(card => {
             card.addEventListener('mouseenter', () => {
                 this.state.hoveredCards.add(card);
                 this.onCardHover(card, true);
@@ -197,8 +226,22 @@ export class VisualOrchestrator {
     }
     
     observeSections() {
-        const sections = document.querySelectorAll('[data-section]');
-        
+        const observedSections = new Set(document.querySelectorAll('[data-section]'));
+
+        if (!observedSections.size) {
+            document.querySelectorAll('section[id]').forEach((section) => {
+                if (!section.dataset.section) {
+                    section.dataset.section = section.id;
+                }
+                observedSections.add(section);
+            });
+        }
+
+        if (!observedSections.size) {
+            console.warn('VisualOrchestrator: no sections found to observe');
+            return;
+        }
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
@@ -209,8 +252,13 @@ export class VisualOrchestrator {
                 }
             });
         }, { threshold: [0, 0.25, 0.5, 0.75, 1.0] });
-        
-        sections.forEach(section => observer.observe(section));
+
+        observedSections.forEach(section => {
+            if (!section.dataset.section && section.id) {
+                section.dataset.section = section.id;
+            }
+            observer.observe(section);
+        });
     }
     
     transitionToSection(sectionId) {
@@ -221,11 +269,44 @@ export class VisualOrchestrator {
         
         // Set new visual target
         Object.assign(this.visualTarget, profile);
+        this.updateSectionCss(sectionId, profile);
         
         // Dispatch event for other systems
         window.dispatchEvent(new CustomEvent('sectionTransition', {
             detail: { section: sectionId, profile }
         }));
+    }
+    
+    updateSectionCss(sectionId, profile) {
+        const body = document.body;
+        const root = document.documentElement;
+        const sectionEl = document.querySelector(`[data-section="${sectionId}"]`);
+
+        if (this.activeSectionElement && this.activeSectionElement !== sectionEl) {
+            this.activeSectionElement.removeAttribute('data-section-active');
+            this.activeSectionElement.classList.remove('is-active');
+        }
+
+        if (sectionEl) {
+            sectionEl.setAttribute('data-section-active', 'true');
+            sectionEl.classList.add('is-active');
+            this.activeSectionElement = sectionEl;
+        }
+
+        if (body) {
+            body.dataset.activeSection = sectionId;
+            body.dataset.sectionForm = profile.form || 'default';
+            body.dataset.sectionPreset = profile.preset || 'default';
+        }
+
+        if (root) {
+            if (typeof profile.hue === 'number') {
+                root.style.setProperty('--section-hue-target', `${profile.hue.toFixed(2)}deg`);
+            }
+            if (typeof profile.intensity === 'number') {
+                root.style.setProperty('--section-intensity-target', profile.intensity.toFixed(4));
+            }
+        }
     }
     
     onCardHover(card, isEntering) {
@@ -355,6 +436,11 @@ export class VisualOrchestrator {
         // Hue shifts slightly based on mouse position
         const hueShift = (this.state.mousePos.x - 0.5) * 40;
         this.visualTarget.hue = (profile.hue + hueShift + 360) % 360;
+        this.state.dominantColor = {
+            h: this.visualTarget.hue,
+            s: 0.8,
+            v: 0.9
+        };
         
         // Clamp all values
         this.visualTarget.intensity = Math.min(1.0, this.visualTarget.intensity);
@@ -378,6 +464,18 @@ export class VisualOrchestrator {
     }
     
     broadcastState() {
+        const root = document.documentElement;
+        if (root) {
+            root.style.setProperty('--visual-intensity', this.visualState.intensity.toFixed(4));
+            root.style.setProperty('--visual-chaos', this.visualState.chaos.toFixed(4));
+            root.style.setProperty('--visual-speed', this.visualState.speed.toFixed(4));
+            root.style.setProperty('--visual-hue', `${this.visualState.hue.toFixed(2)}deg`);
+            root.style.setProperty('--visual-rgb-offset', this.visualState.rgbOffset.toFixed(4));
+            root.style.setProperty('--visual-moire', this.visualState.moireIntensity.toFixed(4));
+            root.style.setProperty('--visual-energy', this.state.userEnergy.toFixed(4));
+            root.style.setProperty('--scroll-velocity', this.state.scrollVelocity.toFixed(4));
+        }
+
         // Dispatch event with current visual state
         window.dispatchEvent(new CustomEvent('visualStateUpdate', {
             detail: {
