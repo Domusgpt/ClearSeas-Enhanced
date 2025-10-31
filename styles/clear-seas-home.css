@@ -26,11 +26,49 @@
   --texture-hue: 0deg;
   --texture-saturation: 1;
   --texture-opacity: 0.85;
+  --section-beacon-hsl: 188 72% 58%;
+  --section-beacon-highlight: 188 72% 68%;
+  --section-beacon-shadow: 188 58% 42%;
+  --section-pulse: 0;
+  --event-pointer-pulse: 0;
+  --event-scroll-pulse: 0;
+  --event-pulse: 0;
+  --section-elapsed: 0;
 }
 
 body {
   position: relative;
   min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  background-color: rgba(4, 10, 22, 0.85);
+  background:
+    radial-gradient(
+      circle at 50% calc(38% + var(--section-pulse) * -8%),
+      hsl(var(--section-beacon-highlight) / calc(0.22 + var(--section-pulse) * 0.4)) 0%,
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse at 80% 16%,
+      hsl(var(--section-beacon-hsl) / calc(0.12 + var(--event-pulse) * 0.24)) 0%,
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(var(--section-beacon-shadow) / 0.45) 0%,
+      rgba(6, 12, 22, 0.65) 38%,
+      rgba(4, 10, 22, 0.92) 100%
+    );
+  opacity: clamp(0, 0.18 + var(--section-pulse) * 0.22 + var(--event-pulse) * 0.2, 0.55);
+  transition: opacity 0.6s var(--ease-in-out), transform 0.6s var(--ease-in-out);
+  transform: translate3d(0, calc(var(--section-pulse) * -12px), 0)
+    scale(calc(1 + var(--event-pulse) * 0.05));
 }
 
 body.scroll-choreography-active {
@@ -64,6 +102,14 @@ body.scroll-choreo-reduced {
   --texture-hue: 0deg;
   --texture-saturation: 1;
   --texture-opacity: 0.75;
+  --section-beacon-hsl: 188 60% 50%;
+  --section-beacon-highlight: 188 60% 60%;
+  --section-beacon-shadow: 188 45% 36%;
+  --section-pulse: 0;
+  --event-pointer-pulse: 0;
+  --event-scroll-pulse: 0;
+  --event-pulse: 0;
+  --section-elapsed: 0;
 }
 
 #polytopal-field {
@@ -74,8 +120,9 @@ body.scroll-choreo-reduced {
   height: 100vh;
   pointer-events: none;
   z-index: -3;
-  opacity: 0.85;
+  opacity: calc(0.72 + var(--event-pulse) * 0.18);
 }
+
 
 .moire-layer {
   position: fixed;
@@ -85,38 +132,62 @@ body.scroll-choreo-reduced {
   display: grid;
   place-items: center;
   mix-blend-mode: screen;
-  opacity: calc(var(--moire-opacity) * (0.75 + var(--hero-energy) * 0.6));
+  opacity: calc(var(--moire-opacity) * (0.45 + var(--hero-energy) * 0.3 + var(--event-pulse) * 0.3));
   transform: translateY(calc(var(--hero-parallax-y) * -0.08)) scale(var(--moire-scale))
     rotate(var(--moire-rotation));
   transition: opacity 0.6s var(--ease-in-out);
+  filter:
+    hue-rotate(calc(var(--texture-hue) - 12deg))
+    saturate(calc(0.85 + var(--section-pulse) * 0.3))
+    brightness(calc(0.86 + var(--event-pulse) * 0.18))
+    contrast(1.08);
 }
 
 .scroll-choreo-reduced .moire-layer {
-  mix-blend-mode: lighten;
+  mix-blend-mode: normal;
 }
 
 .moire-layer::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 40%, rgba(16, 24, 38, 0.35), transparent 70%);
-  filter: blur(120px);
-  opacity: 0.75;
+  background:
+    radial-gradient(
+      circle at 50% calc(40% + var(--section-pulse) * -6%),
+      hsl(var(--section-beacon-highlight) / calc(0.3 + var(--section-pulse) * 0.35)),
+      transparent 74%
+    ),
+    linear-gradient(
+      120deg,
+      hsl(var(--section-beacon-shadow) / 0.55),
+      hsl(var(--section-beacon-hsl) / 0.16)
+    );
+  filter: blur(calc(110px + var(--section-pulse) * 40px));
+  opacity: clamp(0, 0.66 + var(--section-pulse) * 0.25, 0.92);
 }
+
 
 .moire-channel {
   position: relative;
   width: min(1200px, 90vw);
   height: min(1200px, 90vh);
   border-radius: clamp(280px, calc(520px * (1 - var(--hero-mask-progress) * 0.3)), 640px);
-  background-size: 180px 180px;
+  background-size:
+    240px 240px,
+    280px 280px,
+    100% 100%;
   background-position:
     calc(50% + var(--moire-drift-x)) calc(50% + var(--moire-drift-y)),
-    calc(50% - var(--moire-drift-x)) calc(50% - var(--moire-drift-y));
-  background-blend-mode: screen;
-  filter: blur(0.2px);
+    calc(50% - var(--moire-drift-x)) calc(50% - var(--moire-drift-y)),
+    50% 50%;
+  background-blend-mode: screen, screen, soft-light;
+  filter: blur(0.45px);
   transform: translateY(var(--hero-parallax-y));
-  opacity: calc(0.32 + var(--hero-energy) * 0.38);
+  background-color: hsl(var(--section-beacon-shadow) / 0.12);
+  opacity: clamp(0, 0.2 + var(--hero-energy) * 0.24 + var(--section-pulse) * 0.2, 0.8);
+  box-shadow:
+    0 0 48px hsl(var(--section-beacon-hsl) / calc(0.08 + var(--section-pulse) * 0.18)),
+    inset 0 0 32px hsl(var(--section-beacon-shadow) / calc(0.06 + var(--event-pulse) * 0.12));
 }
 
 .moire-channel::after {
@@ -124,69 +195,196 @@ body.scroll-choreo-reduced {
   position: absolute;
   inset: 12%;
   border-radius: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.02);
-  mix-blend-mode: overlay;
+  border: 1px solid hsl(var(--section-beacon-highlight) / 0.18);
+  background:
+    radial-gradient(
+      circle at 42% 32%,
+      hsl(var(--section-beacon-highlight) / calc(0.26 + var(--section-pulse) * 0.3)),
+      transparent 76%
+    ),
+    radial-gradient(
+      circle at 64% 72%,
+      hsl(var(--section-beacon-hsl) / calc(0.16 + var(--event-pointer-pulse) * 0.22)),
+      transparent 70%
+    );
+  mix-blend-mode: screen;
+  opacity: clamp(0, 0.25 + var(--section-pulse) * 0.35, 0.75);
+  transition: opacity 0.5s var(--ease-in-out);
 }
+
 
 .moire-channel-r {
   background-image:
+    linear-gradient(
+      130deg,
+      hsl(var(--section-beacon-highlight) / calc(0.28 + var(--section-pulse) * 0.3)),
+      transparent 68%
+    ),
     repeating-linear-gradient(
       135deg,
-      rgba(255, 64, 110, 0.35) 0px,
-      rgba(255, 64, 110, 0.35) 24px,
-      transparent 24px,
-      transparent 48px
+      rgba(47, 218, 255, 0.28) 0px,
+      rgba(47, 218, 255, 0.28) 34px,
+      transparent 34px,
+      transparent 84px
     ),
     repeating-linear-gradient(
       -135deg,
-      rgba(255, 64, 110, 0.12) 0px,
-      rgba(255, 64, 110, 0.12) 16px,
-      transparent 16px,
-      transparent 32px
-    );
-  transform: translateX(calc(var(--moire-shift) * -0.5)) translateY(calc(var(--hero-parallax-y) * -0.08)) rotate(-1deg);
+      rgba(194, 140, 255, 0.18) 0px,
+      rgba(194, 140, 255, 0.18) 52px,
+      transparent 52px,
+      transparent 104px
+    ),
+    linear-gradient(115deg, rgba(10, 18, 32, 0.22), rgba(6, 10, 20, 0.12));
+  transform: translateX(calc(var(--moire-shift) * -0.5))
+    translateY(calc(var(--hero-parallax-y) * -0.08 - var(--section-pulse) * 6px))
+    rotate(-0.85deg)
+    scale(calc(1 + var(--section-pulse) * 0.02));
+  opacity: clamp(0, 0.55 + var(--section-pulse) * 0.25 + var(--event-pulse) * 0.2, 0.95);
+  mix-blend-mode: screen;
 }
 
 .moire-channel-g {
   background-image:
+    linear-gradient(
+      210deg,
+      hsl(var(--section-beacon-hsl) / calc(0.24 + var(--event-pulse) * 0.28)),
+      transparent 70%
+    ),
     repeating-linear-gradient(
       45deg,
-      rgba(0, 214, 255, 0.32) 0px,
-      rgba(0, 214, 255, 0.32) 20px,
-      transparent 20px,
-      transparent 40px
+      rgba(32, 230, 210, 0.22) 0px,
+      rgba(32, 230, 210, 0.22) 36px,
+      transparent 36px,
+      transparent 92px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgba(0, 214, 255, 0.18) 0px,
-      rgba(0, 214, 255, 0.18) 32px,
-      transparent 32px,
-      transparent 64px
-    );
-  transform: translateX(calc(var(--moire-shift) * 0.4)) translateY(calc(var(--hero-parallax-y) * -0.05)) rotate(0.5deg);
+      rgba(255, 94, 184, 0.18) 0px,
+      rgba(255, 94, 184, 0.18) 56px,
+      transparent 56px,
+      transparent 112px
+    ),
+    linear-gradient(135deg, rgba(9, 18, 32, 0.2), rgba(12, 22, 38, 0.1));
+  transform: translateX(calc(var(--moire-shift) * 0.4))
+    translateY(calc(var(--hero-parallax-y) * -0.05 - var(--event-pointer-pulse) * 5px))
+    rotate(0.65deg)
+    scale(calc(1 + var(--event-pointer-pulse) * 0.018));
+  opacity: clamp(0, 0.5 + var(--event-pointer-pulse) * 0.25, 0.9);
+  mix-blend-mode: screen;
 }
 
 .moire-channel-b {
   background-image:
+    linear-gradient(
+      160deg,
+      hsl(var(--section-beacon-shadow) / calc(0.3 + var(--event-scroll-pulse) * 0.25)),
+      transparent 74%
+    ),
     repeating-linear-gradient(
       90deg,
-      rgba(120, 92, 255, 0.28) 0px,
-      rgba(120, 92, 255, 0.28) 18px,
-      transparent 18px,
-      transparent 36px
+      rgba(162, 124, 255, 0.24) 0px,
+      rgba(162, 124, 255, 0.24) 30px,
+      transparent 30px,
+      transparent 78px
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(120, 92, 255, 0.18) 0px,
-      rgba(120, 92, 255, 0.18) 30px,
-      transparent 30px,
-      transparent 60px
-    );
-  transform: translateX(calc(var(--moire-shift) * 0.8)) translateY(calc(var(--hero-parallax-y) * -0.12)) rotate(1.35deg);
+      rgba(38, 215, 255, 0.16) 0px,
+      rgba(38, 215, 255, 0.16) 44px,
+      transparent 44px,
+      transparent 96px
+    ),
+    linear-gradient(160deg, rgba(8, 15, 28, 0.2), rgba(12, 22, 38, 0.1));
+  transform: translateX(calc(var(--moire-shift) * 0.8))
+    translateY(calc(var(--hero-parallax-y) * -0.12 - var(--event-scroll-pulse) * 7px))
+    rotate(1.2deg)
+    scale(calc(1 + var(--event-scroll-pulse) * 0.022));
+  opacity: clamp(0, 0.48 + var(--event-scroll-pulse) * 0.28, 0.92);
+  mix-blend-mode: screen;
+}
+
+.section-beacon-indicator {
+  position: fixed;
+  top: clamp(20px, 6vh, 48px);
+  right: clamp(18px, 6vw, 48px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background-color: rgba(6, 12, 24, 0.72);
+  background:
+    color-mix(in srgb, hsl(var(--section-beacon-shadow) / 0.38) 65%, rgba(6, 12, 24, 0.68));
+  backdrop-filter: blur(22px);
+  box-shadow:
+    0 18px 48px rgba(6, 14, 28, calc(0.18 + var(--indicator-pulse, var(--section-pulse)) * 0.25)),
+    inset 0 0 32px hsl(var(--section-beacon-hsl) / calc(0.06 + var(--indicator-pulse, var(--section-pulse)) * 0.1));
+  color: rgba(230, 248, 255, 0.9);
+  font-family: "Suisse Intl", "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 12;
+  opacity: clamp(0.2, 0.42 + var(--indicator-pulse, var(--section-pulse)) * 0.4 + var(--event-pulse) * 0.2, 1);
+  transform: translate3d(0, calc(var(--indicator-pulse, var(--section-pulse)) * -6px), 0);
+  transition: opacity 0.6s var(--ease-in-out), transform 0.6s var(--ease-in-out);
+}
+
+.section-beacon-indicator .section-beacon-ring {
+  position: relative;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, hsl(var(--section-beacon-highlight) / 1) 0%, transparent 70%),
+    radial-gradient(circle, hsl(var(--section-beacon-hsl) / 0.4) 0%, transparent 100%);
+  box-shadow:
+    0 0 24px hsl(var(--section-beacon-highlight) / calc(0.4 + var(--indicator-pulse, var(--section-pulse)) * 0.6));
+}
+
+.section-beacon-indicator .section-beacon-label {
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  opacity: 0.9;
+}
+
+.section-beacon-indicator .section-beacon-echo {
+  position: absolute;
+  inset: -40%;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    hsl(var(--section-beacon-hsl) / calc(0.12 + var(--indicator-pulse, var(--section-pulse)) * 0.3)) 0%,
+    transparent 65%
+  );
+  opacity: clamp(0, 0.2 + var(--indicator-pulse, var(--section-pulse)) * 0.3, 0.5);
+  filter: blur(24px);
+  pointer-events: none;
+  transition: opacity 0.6s var(--ease-in-out);
+}
+
+.section-beacon-indicator.is-pulsing .section-beacon-echo {
+  animation: section-beacon-echo 2.4s ease-out infinite;
+}
+
+@keyframes section-beacon-echo {
+  0% {
+    transform: scale(0.8);
+    opacity: clamp(0, 0.35 + var(--indicator-pulse, var(--section-pulse)) * 0.2, 0.6);
+  }
+  70% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
 
 .moire-channel:not(:first-child) {
-  mix-blend-mode: lighten;
+  mix-blend-mode: screen;
 }
 
 .texture-layer {
