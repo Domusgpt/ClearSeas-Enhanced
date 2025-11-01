@@ -471,6 +471,18 @@ class ClearSeasEnhancedApplication {
             this.canvasManager.dispose();
         }
 
+        if (document.body) {
+            document.body.removeAttribute('data-visual-system');
+            document.body.removeAttribute('data-active-section');
+            document.body.removeAttribute('data-section-form');
+            document.body.removeAttribute('data-section-preset');
+        }
+
+        document.querySelectorAll('.primary-navigation a.is-active').forEach(link => {
+            link.classList.remove('is-active');
+            link.removeAttribute('aria-current');
+        });
+
         this.isInitialized = false;
         this.logger.info('Application disposed');
     }

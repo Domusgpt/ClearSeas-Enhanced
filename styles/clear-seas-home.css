@@ -32,6 +32,18 @@ body {
   opacity: 0.85;
 }
 
+body[data-visual-system="enhanced"] .texture-layer {
+  background-image:
+    radial-gradient(circle at 18% 18%, hsla(var(--section-hue-target), 82%, 60%, calc(0.12 + var(--visual-intensity) * 0.1)) 0%, transparent 60%),
+    radial-gradient(circle at 78% 10%, hsla(calc(var(--section-hue-target) + 60deg), 78%, 55%, calc(0.08 + var(--visual-energy) * 0.08)) 0%, transparent 70%),
+    linear-gradient(120deg, rgba(8, 11, 18, 0.75), rgba(6, 9, 16, 0.94));
+  opacity: calc(0.72 + var(--visual-intensity) * 0.18);
+  filter: saturate(calc(0.95 + var(--visual-intensity) * 0.1)) brightness(calc(0.95 + var(--visual-energy) * 0.06));
+  transition: background-image var(--duration-slower) var(--ease-in-out),
+              opacity var(--duration-slower) var(--ease-in-out),
+              filter var(--duration-slower) var(--ease-in-out);
+}
+
 .container {
   width: min(1180px, calc(100% - 2 * var(--space-5)));
   margin: 0 auto;

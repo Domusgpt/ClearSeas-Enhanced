@@ -309,11 +309,23 @@ export class FacetedSystem {
     updateFromOrchestrator(detail) {
         const { state } = detail;
 
-        this.params.gridDensity = 10 + state.intensity * 10;
+        this.params.gridDensity = state.gridDensity || (10 + state.intensity * 10);
+        this.params.morphFactor = state.morphFactor || 1.0;
         this.params.chaos = state.chaos;
         this.params.speed = state.speed;
         this.params.hue = state.hue;
         this.params.intensity = state.intensity;
+
+        // 4D rotation parameters
+        if (state.rot4dXW !== undefined) this.params.rot4dXW = state.rot4dXW;
+        if (state.rot4dYW !== undefined) this.params.rot4dYW = state.rot4dYW;
+        if (state.rot4dZW !== undefined) this.params.rot4dZW = state.rot4dZW;
+    }
+
+    updateParameter(param, value) {
+        if (this.params.hasOwnProperty(param)) {
+            this.params[param] = value;
+        }
     }
 
     setActive(active) {

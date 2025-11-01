@@ -211,6 +211,8 @@ section[data-section] {
     transform var(--duration-slower) var(--ease-in-out),
     filter var(--duration-slower) var(--ease-in-out),
     box-shadow var(--duration-slower) var(--ease-in-out);
+  position: relative;
+  isolation: isolate;
   scroll-margin-top: calc(var(--space-20) + 24px);
 }
 
@@ -225,6 +227,38 @@ section[data-section][data-section-active="true"] {
   transform: translateY(0);
   filter: saturate(1.08);
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.3);
+}
+
+section[data-section]::before {
+  content: "";
+  position: absolute;
+  inset: 6% 4% auto 4%;
+  height: min(240px, 40%);
+  background: radial-gradient(circle at 50% 20%, hsla(var(--section-hue-target), 80%, 65%, 0.08), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--duration-slower) var(--ease-in-out),
+              transform var(--duration-slower) var(--ease-in-out),
+              background var(--duration-slower) var(--ease-in-out);
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(0px);
+}
+
+section[data-section][data-section-active="true"]::before {
+  opacity: calc(0.35 + var(--visual-intensity) * 0.25);
+  transform: translate3d(0, -10px, 0) scale3d(calc(0.96 + var(--visual-energy) * 0.06), calc(1.02 + var(--visual-energy) * 0.04), 1);
+  background: radial-gradient(circle at 50% 20%, hsla(var(--section-hue-target), 82%, 65%, calc(0.16 + var(--visual-intensity) * 0.12)), transparent 75%);
+  filter: blur(calc(24px + var(--visual-intensity) * 12px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section[data-section] {
+    transition: none;
+  }
+
+  section[data-section]::before {
+    transition: none;
+  }
 }
 
 /* ===== TYPOGRAPHY SYSTEM ===== */

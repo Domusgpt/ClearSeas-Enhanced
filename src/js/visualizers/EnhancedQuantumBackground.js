@@ -53,17 +53,35 @@ export class EnhancedQuantumBackground {
     
     updateFromOrchestrator(detail) {
         const { state } = detail;
-        
+
         // Smoothly update parameters from orchestrator
-        this.params.gridDensity = 10 + state.intensity * 8;
+        this.params.gridDensity = state.gridDensity || (10 + state.intensity * 8);
+        this.params.morphFactor = state.morphFactor || 1.0;
         this.params.chaos = state.chaos;
         this.params.speed = state.speed;
         this.params.hue = state.hue;
         this.params.intensity = state.intensity;
-        this.params.rgbOffset = state.rgbOffset;
-        this.params.moireIntensity = state.moireIntensity;
+        this.params.rgbOffset = state.rgbOffset || 0.002;
+        this.params.moireIntensity = state.moireIntensity || 0.1;
+
+        // 4D rotation parameters
+        if (state.rot4dXW !== undefined) this.rotation4D.xw = state.rot4dXW;
+        if (state.rot4dYW !== undefined) this.rotation4D.yw = state.rot4dYW;
+        if (state.rot4dZW !== undefined) this.rotation4D.zw = state.rot4dZW;
     }
-    
+
+    updateParameter(param, value) {
+        if (this.params.hasOwnProperty(param)) {
+            this.params[param] = value;
+        } else if (param === 'rot4dXW') {
+            this.rotation4D.xw = value;
+        } else if (param === 'rot4dYW') {
+            this.rotation4D.yw = value;
+        } else if (param === 'rot4dZW') {
+            this.rotation4D.zw = value;
+        }
+    }
+
     initShaders() {
         const gl = this.gl;
         

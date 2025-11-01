@@ -37,7 +37,14 @@ export class VisualOrchestrator {
             hue: 180,
             rgbOffset: 0.0,
             moireIntensity: 0.0,
-            fractalDecay: 0.0
+            fractalDecay: 0.0,
+            // NEW: Scroll-based parameter sweeps
+            gridDensity: 15,
+            morphFactor: 1.0,
+            // NEW: 4D rotation orbital effects
+            rot4dXW: 0.0,
+            rot4dYW: 0.0,
+            rot4dZW: 0.0
         };
         
         // Current visual state (smooth interpolation)
@@ -482,7 +489,7 @@ export class VisualOrchestrator {
     applyMultipliers() {
         const profile = this.sectionProfiles[this.state.currentSection];
         if (!profile) return;
-        
+
         // Apply multipliers to create dynamic target
         const avgMultiplier = (
             this.multipliers.mouseActivity +
@@ -491,41 +498,80 @@ export class VisualOrchestrator {
             this.multipliers.timeOfDay +
             this.multipliers.userEnergy
         ) / 5;
-        
+
         // Modulate intensity
         this.visualTarget.intensity = profile.intensity * avgMultiplier;
-        
-        // Modulate chaos based on activity
-        this.visualTarget.chaos = profile.chaos * this.multipliers.userEnergy;
-        
-        // Modulate speed
-        this.visualTarget.speed = profile.speed * this.multipliers.mouseActivity;
-        
-        // RGB offset increases with mouse velocity
+
+        // Modulate chaos based on activity + scroll velocity
+        this.visualTarget.chaos = profile.chaos * this.multipliers.userEnergy + (this.state.scrollVelocity * 0.2);
+
+        // Modulate speed with micro-reactions to mouse velocity
         const mouseVelMag = Math.sqrt(
-            this.state.mouseVelocity.x ** 2 + 
+            this.state.mouseVelocity.x ** 2 +
             this.state.mouseVelocity.y ** 2
         );
-        this.visualTarget.rgbOffset = profile.rgbOffset + (mouseVelMag * 0.005);
-        
+        this.visualTarget.speed = profile.speed * this.multipliers.mouseActivity + (mouseVelMag * 2.5);
+
+        // RGB offset increases with mouse velocity (chromatic aberration sweep)
+        this.visualTarget.rgbOffset = profile.rgbOffset + (mouseVelMag * 0.008);
+
         // Moiré increases with scroll velocity
-        this.visualTarget.moireIntensity = profile.moireIntensity + (this.state.scrollVelocity * 0.3);
-        
-        // Hue shifts slightly based on mouse position
-        const hueShift = (this.state.mousePos.x - 0.5) * 40;
+        this.visualTarget.moireIntensity = profile.moireIntensity + (this.state.scrollVelocity * 0.4);
+
+        // Hue shifts based on mouse position (horizontal sweep)
+        const hueShift = (this.state.mousePos.x - 0.5) * 60;
         this.visualTarget.hue = (profile.hue + hueShift + 360) % 360;
+
+        // **NEW: SCROLL-BASED PARAMETER SWEEPS**
+        // GridDensity increases with scroll progress (denser as you scroll down)
+        this.visualTarget.gridDensity = 10 + (this.state.scroll * 15) + (this.state.userEnergy * 5);
+
+        // MorphFactor oscillates with scroll position and mouse activity
+        const scrollOscillation = Math.sin(this.state.scroll * Math.PI * 2) * 0.3;
+        this.visualTarget.morphFactor = 1.0 + scrollOscillation + (mouseVelMag * 0.5);
+
+        // **NEW: 4D ROTATION ORBITAL EFFECTS FROM MOUSE**
+        // Convert mouse position to orbital rotation (gyroscope-like effect)
+        const mouseDeltaX = this.state.mousePos.x - 0.5; // -0.5 to 0.5
+        const mouseDeltaY = this.state.mousePos.y - 0.5;
+
+        // XW rotation: horizontal mouse movement creates orbital tilt
+        this.visualTarget.rot4dXW = mouseDeltaX * Math.PI * 0.5;
+
+        // YW rotation: vertical mouse movement creates vertical orbital spin
+        this.visualTarget.rot4dYW = mouseDeltaY * Math.PI * 0.5;
+
+        // ZW rotation: combined mouse position creates depth rotation
+        const mouseDistance = Math.sqrt(mouseDeltaX ** 2 + mouseDeltaY ** 2);
+        this.visualTarget.rot4dZW = mouseDistance * Math.PI * 0.3;
+
+        // **NEW: BOUNDARY MORPHING WITH CARD HOVER**
+        if (this.state.hoveredCards.size > 0) {
+            // Cards hovered: spawn more density, increase morph
+            this.visualTarget.gridDensity += this.state.hoveredCards.size * 8;
+            this.visualTarget.morphFactor += this.state.hoveredCards.size * 0.3;
+            this.visualTarget.chaos += this.state.hoveredCards.size * 0.15;
+        }
+
         this.state.dominantColor = {
             h: this.visualTarget.hue,
-            s: 0.8,
+            s: 0.8 + (mouseVelMag * 0.15), // Saturation increases with movement
             v: 0.9
         };
-        
+
         // Clamp all values
         this.visualTarget.intensity = Math.min(1.0, this.visualTarget.intensity);
         this.visualTarget.chaos = Math.min(1.0, this.visualTarget.chaos);
-        this.visualTarget.speed = Math.min(2.0, this.visualTarget.speed);
+        this.visualTarget.speed = Math.min(3.0, this.visualTarget.speed);
         this.visualTarget.rgbOffset = Math.min(0.02, this.visualTarget.rgbOffset);
         this.visualTarget.moireIntensity = Math.min(1.0, this.visualTarget.moireIntensity);
+        this.visualTarget.gridDensity = Math.min(50, Math.max(5, this.visualTarget.gridDensity));
+        this.visualTarget.morphFactor = Math.min(2.5, Math.max(0.5, this.visualTarget.morphFactor));
+
+        // Clamp 4D rotations
+        this.visualTarget.rot4dXW = Math.max(-Math.PI, Math.min(Math.PI, this.visualTarget.rot4dXW));
+        this.visualTarget.rot4dYW = Math.max(-Math.PI, Math.min(Math.PI, this.visualTarget.rot4dYW));
+        this.visualTarget.rot4dZW = Math.max(-Math.PI, Math.min(Math.PI, this.visualTarget.rot4dZW));
     }
     
     interpolateVisualState(deltaTime) {
@@ -552,21 +598,58 @@ export class VisualOrchestrator {
             root.style.setProperty('--visual-moire', this.visualState.moireIntensity.toFixed(4));
             root.style.setProperty('--visual-energy', this.state.userEnergy.toFixed(4));
             root.style.setProperty('--scroll-velocity', this.state.scrollVelocity.toFixed(4));
+
+            // NEW: Scroll-based parameter sweeps
+            root.style.setProperty('--visual-grid-density', this.visualState.gridDensity.toFixed(2));
+            root.style.setProperty('--visual-morph-factor', this.visualState.morphFactor.toFixed(4));
+
+            // NEW: 4D rotation orbital effects
+            root.style.setProperty('--visual-rot4d-xw', this.visualState.rot4dXW.toFixed(4));
+            root.style.setProperty('--visual-rot4d-yw', this.visualState.rot4dYW.toFixed(4));
+            root.style.setProperty('--visual-rot4d-zw', this.visualState.rot4dZW.toFixed(4));
         }
 
-        // Dispatch event with current visual state
+        // Dispatch event with current visual state (visualizers listen to this)
         window.dispatchEvent(new CustomEvent('visualStateUpdate', {
             detail: {
-                state: { ...this.visualState },
+                state: {
+                    ...this.visualState,
+                    // Include active system info
+                    activeSystem: this.activeSystem
+                },
                 multipliers: { ...this.multipliers },
                 context: {
                     section: this.state.currentSection,
                     scroll: this.state.scroll,
                     userEnergy: this.state.userEnergy,
-                    mouseActivity: this.state.mouseActivity
+                    mouseActivity: this.state.mouseActivity,
+                    mousePos: this.state.mousePos,
+                    scrollVelocity: this.state.scrollVelocity
                 }
             }
         }));
+
+        // Send parameters directly to active visualizer system
+        if (this.systems[this.activeSystem] && this.systems[this.activeSystem].updateParameter) {
+            const params = {
+                gridDensity: this.visualState.gridDensity,
+                morphFactor: this.visualState.morphFactor,
+                chaos: this.visualState.chaos,
+                speed: this.visualState.speed,
+                hue: this.visualState.hue,
+                intensity: this.visualState.intensity,
+                rot4dXW: this.visualState.rot4dXW,
+                rot4dYW: this.visualState.rot4dYW,
+                rot4dZW: this.visualState.rot4dZW,
+                rgbOffset: this.visualState.rgbOffset,
+                moireIntensity: this.visualState.moireIntensity
+            };
+
+            // Send all parameters to active system
+            Object.entries(params).forEach(([param, value]) => {
+                this.systems[this.activeSystem].updateParameter(param, value);
+            });
+        }
     }
     
     getTimeOfDay() {
