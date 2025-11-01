@@ -7,8 +7,12 @@
  * Creates choreographed transitions between section-specific visualizer states
  * with velocity-based dynamics and emergent morphing
  *
+ * REFACTORED: Now integrates with MicroScrollChoreographer for per-tick responsiveness
+ *
  * © 2025 Clear Seas Solutions LLC - Paul Phillips
  */
+
+import { MicroScrollChoreographer } from './MicroScrollChoreographer.js';
 
 export class ScrollChoreographer {
     constructor(options = {}) {
@@ -32,6 +36,14 @@ export class ScrollChoreographer {
         this.currentSectionIndex = 0;
         this.sectionProgress = 0; // 0-1 within current section
         this.transitionProgress = 0; // 0-1 for inter-section blending
+
+        // MicroScrollChoreographer integration
+        this.microChoreographer = new MicroScrollChoreographer({
+            bufferSize: 10,
+            rotationSensitivity: options.microRotationSensitivity || 0.001,
+            chaosSensitivity: options.microChaosSensitivity || 0.01,
+            morphSensitivity: options.microMorphSensitivity || 0.0001
+        });
 
         this.initialize();
     }
@@ -520,8 +532,14 @@ export class ScrollChoreographer {
     /**
      * Update current state with smooth interpolation towards target
      * Call this every frame
+     *
+     * REFACTORED: Now merges micro-state for per-tick responsiveness
      */
     update() {
+        // Get micro-state from MicroScrollChoreographer
+        const microState = this.microChoreographer.getMicroState();
+        const velocityEffects = this.microChoreographer.getVelocityEffects();
+
         // Smooth lerp towards target state
         for (const key in this.targetState) {
             if (typeof this.currentState[key] === 'number' && typeof this.targetState[key] === 'number') {
@@ -529,8 +547,32 @@ export class ScrollChoreographer {
                 if (key === 'geometry') {
                     this.currentState[key] = this.targetState[key];
                 } else {
-                    // Smooth interpolation for other parameters
-                    this.currentState[key] += (this.targetState[key] - this.currentState[key]) * this.lerpSpeed;
+                    // Base interpolation
+                    let targetValue = this.targetState[key];
+
+                    // Apply velocity effects if available
+                    if (velocityEffects[key] !== undefined) {
+                        targetValue = velocityEffects[key];
+                    }
+
+                    // Apply micro-state ADDITIVE adjustments for rotation
+                    if (key.startsWith('rot4d') && microState[key] !== undefined) {
+                        targetValue += microState[key];
+                    }
+                    // Apply micro-state ADDITIVE adjustments for other parameters
+                    else if (key === 'chaos' || key === 'morphFactor') {
+                        targetValue += microState[key];
+                    }
+                    // Apply micro-state OVERRIDES for grid density and hue
+                    else if (key === 'gridDensity' && Math.abs(microState.gridDensity) > 0.1) {
+                        targetValue += microState.gridDensity;
+                    }
+                    else if (key === 'hue' && Math.abs(microState.hue) > 0.1) {
+                        targetValue = (targetValue + microState.hue) % 360;
+                    }
+
+                    // Smooth interpolation
+                    this.currentState[key] += (targetValue - this.currentState[key]) * this.lerpSpeed;
                 }
             }
         }
@@ -599,6 +641,41 @@ export class ScrollChoreographer {
      */
     getScrollVelocity() {
         return this.scrollVelocity;
+    }
+
+    /**
+     * Get micro-choreographer (for external access)
+     */
+    getMicroChoreographer() {
+        return this.microChoreographer;
+    }
+
+    /**
+     * Get micro-state directly (for debugging)
+     */
+    getMicroState() {
+        return this.microChoreographer.getMicroState();
+    }
+
+    /**
+     * Get velocity tier (slow/medium/fast)
+     */
+    getVelocityTier() {
+        return this.microChoreographer.getVelocityTier();
+    }
+
+    /**
+     * Get performance stats (for debugging)
+     */
+    getPerformanceStats() {
+        return this.microChoreographer.getStats();
+    }
+
+    /**
+     * Reset micro-state accumulators (useful when changing sections)
+     */
+    resetMicroState() {
+        this.microChoreographer.resetAccumulators();
     }
 
     /**

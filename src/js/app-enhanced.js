@@ -14,6 +14,7 @@ import { PolytopalFieldVisualizer } from './visualizers/PolytopalFieldVisualizer
 import { ElementVisualizerManager } from './visualizers/ElementVisualizer.js';
 import { EmergentInteractionSystem } from './effects/GeometryMorpher.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
+import { MicroScrollDebugOverlay } from './debug/MicroScrollDebugOverlay.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 class ClearSeasEnhancedApplication {
@@ -27,6 +28,7 @@ class ClearSeasEnhancedApplication {
         this.cardFractalSystem = null;
         this.elementVisualizerManager = null;
         this.emergentInteractionSystem = null;
+        this.microScrollDebugOverlay = null;
         this.isInitialized = false;
 
         this.logger.info('🌊 Clear Seas Solutions - Enhanced Combined System');
@@ -211,6 +213,13 @@ class ClearSeasEnhancedApplication {
             this.canvasManager.start();
 
             this.isInitialized = true;
+
+            // Initialize debug overlay for MicroScrollChoreographer
+            const choreographer = this.orchestrator.getChoreographer();
+            if (choreographer) {
+                this.microScrollDebugOverlay = new MicroScrollDebugOverlay(choreographer);
+                this.logger.info('🎯 MicroScrollDebugOverlay initialized - Press "D" to toggle');
+            }
 
             this.logger.info('✅ Clear Seas Enhanced initialized successfully');
 
