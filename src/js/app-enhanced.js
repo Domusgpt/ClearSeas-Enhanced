@@ -79,8 +79,9 @@ class ClearSeasEnhancedApplication {
             quantumContainer.style.width = '100%';
             quantumContainer.style.height = '100%';
             quantumContainer.style.pointerEvents = 'none';
-            quantumContainer.style.zIndex = '0';
-            quantumContainer.style.opacity = '0.6';
+            quantumContainer.style.zIndex = '1'; // ABOVE polytopal field but BELOW content
+            quantumContainer.style.opacity = '0.8';
+            quantumContainer.style.mixBlendMode = 'screen'; // Blend with background
             document.body.insertBefore(quantumContainer, document.body.firstChild);
 
             const bgCanvas = this.canvasManager.createCanvas('quantum-background', {

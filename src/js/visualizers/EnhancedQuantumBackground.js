@@ -47,7 +47,7 @@ export class EnhancedQuantumBackground extends UnifiedQuantumVisualizer {
     initialize() {
         const canvasData = this.manager.getCanvas(this.canvasId);
         if (!canvasData) {
-            console.error('EnhancedQuantumBackground: Canvas not found:', this.canvasId);
+            console.error('❌ EnhancedQuantumBackground: Canvas not found:', this.canvasId);
             return false;
         }
 
@@ -55,8 +55,22 @@ export class EnhancedQuantumBackground extends UnifiedQuantumVisualizer {
         this.canvas = canvasData.canvas;
         this.gl = canvasData.gl;
 
+        if (!this.gl) {
+            console.error('❌ EnhancedQuantumBackground: No WebGL context!');
+            return false;
+        }
+
+        console.log('✅ EnhancedQuantumBackground: Canvas and GL context ready');
+        console.log('Canvas size:', this.canvas.width, 'x', this.canvas.height);
+
         // Initialize shaders from UnifiedQuantumVisualizer
-        this.initializeShaders();
+        const shaderSuccess = this.initializeShaders();
+        if (!shaderSuccess) {
+            console.error('❌ EnhancedQuantumBackground: Shader initialization failed');
+            return false;
+        }
+
+        console.log('✅ EnhancedQuantumBackground: Shaders initialized');
 
         // Register with CanvasManager for rendering
         this.manager.registerRenderer(this.canvasId, (context) => {
@@ -64,6 +78,7 @@ export class EnhancedQuantumBackground extends UnifiedQuantumVisualizer {
         }, 5);
 
         console.log('🌌 EnhancedQuantumBackground initialized with VIB3+ geometry system');
+        console.log('Initial params:', this.params);
         return true;
     }
 

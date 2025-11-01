@@ -50,7 +50,7 @@ export class ElementVisualizer {
             width: calc(100% + ${this.bleedRadius * 2}px);
             height: calc(100% + ${this.bleedRadius * 2}px);
             pointer-events: none;
-            z-index: -1;
+            z-index: 0;
             opacity: ${this.options.bleedIntensity};
             mix-blend-mode: ${this.getMixBlendMode()};
             transition: opacity 0.5s ease;
@@ -92,7 +92,14 @@ export class ElementVisualizer {
 
         this.visualizer.canvas = this.canvas;
         this.visualizer.gl = gl;
-        this.visualizer.initializeShaders();
+        const shaderSuccess = this.visualizer.initializeShaders();
+
+        if (!shaderSuccess) {
+            console.error('❌ ElementVisualizer: Shader init failed for', this.element);
+            return;
+        }
+
+        console.log('✅ ElementVisualizer created for', this.element.className, 'geometry:', this.visualizer.params.geometry);
 
         // Auto-select geometry based on element type
         if (this.options.autoGeometry) {
