@@ -8,6 +8,7 @@
 
 import { CanvasManager } from './managers/CanvasManager.js';
 import { VisualOrchestrator } from './managers/VisualOrchestrator.js';
+import { GSAPChoreographer } from './managers/GSAPChoreographer.js';
 import { EnhancedQuantumBackground } from './visualizers/EnhancedQuantumBackground.js';
 import { HolographicSystem } from './visualizers/HolographicSystem.js';
 import { FacetedSystem } from './visualizers/FacetedSystem.js';
@@ -21,6 +22,7 @@ class ClearSeasEnhancedApplication {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.canvasManager = null;
         this.orchestrator = null;
+        this.gsapChoreographer = null;
         this.polytopalField = null;
         this.quantumBackground = null;
         this.particleNetworks = new Map();
@@ -148,6 +150,20 @@ class ClearSeasEnhancedApplication {
                 holographic: this.holographicSystem,
                 faceted: this.facetedSystem
             });
+
+            // Initialize GSAP Choreographer (async - waits for GSAP to load)
+            this.logger.info('🎬 Initializing GSAP Choreographer...');
+            this.gsapChoreographer = new GSAPChoreographer(this.orchestrator);
+            // Initialize async after everything else is ready
+            setTimeout(() => {
+                this.gsapChoreographer.initialize().then(success => {
+                    if (success) {
+                        this.logger.info('✅ GSAP Choreographer ready - scroll-locked morphing active');
+                    } else {
+                        this.logger.warn('⚠️ GSAP Choreographer initialization incomplete');
+                    }
+                });
+            }, 1000);
 
             // Initialize Card Fractal System
             this.logger.info('🔮 Initializing Card Fractal System...');
@@ -442,6 +458,10 @@ class ClearSeasEnhancedApplication {
 
     dispose() {
         this.logger.info('Disposing application...');
+
+        if (this.gsapChoreographer) {
+            this.gsapChoreographer.dispose();
+        }
 
         if (this.cardFractalSystem) {
             this.cardFractalSystem.dispose();
