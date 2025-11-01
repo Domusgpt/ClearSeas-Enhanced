@@ -11,6 +11,8 @@ import { VisualOrchestrator } from './managers/VisualOrchestrator.js';
 import { EnhancedQuantumBackground } from './visualizers/EnhancedQuantumBackground.js';
 import { ParticleNetworkSystem } from './visualizers/ParticleNetwork.js';
 import { PolytopalFieldVisualizer } from './visualizers/PolytopalFieldVisualizer.js';
+import { ElementVisualizerManager } from './visualizers/ElementVisualizer.js';
+import { EmergentInteractionSystem } from './effects/GeometryMorpher.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
 import { Utils, Logger } from './utils/Utils.js';
 
@@ -23,6 +25,8 @@ class ClearSeasEnhancedApplication {
         this.quantumBackground = null;
         this.particleNetworks = new Map();
         this.cardFractalSystem = null;
+        this.elementVisualizerManager = null;
+        this.emergentInteractionSystem = null;
         this.isInitialized = false;
 
         this.logger.info('🌊 Clear Seas Solutions - Enhanced Combined System');
@@ -121,11 +125,81 @@ class ClearSeasEnhancedApplication {
                     'quantum-background'
                 );
                 this.quantumBackground.initialize();
+
+                // Connect choreographer for scroll-responsive geometry transitions
+                this.quantumBackground.setChoreographer(this.orchestrator.getChoreographer());
+                this.logger.info('📜 ScrollChoreographer connected to quantum background');
             }
 
             // Initialize Card Fractal System
             this.logger.info('🔮 Initializing Card Fractal System...');
             this.cardFractalSystem = new CardFractalSystem();
+
+            // Initialize Element Visualizer Manager
+            this.logger.info('🎨 Initializing Element Visualizer Manager...');
+            this.elementVisualizerManager = new ElementVisualizerManager(this.orchestrator);
+
+            // Apply visualizers to cards with bleeding effect
+            this.elementVisualizerManager.addToSelector('.card, .signal-card', {
+                role: 'accent',
+                depth: 0.7,
+                reactivity: 1.2,
+                bleedIntensity: 0.4,
+                bleedRadius: 60,
+                autoGeometry: true,
+                hoverBoost: true
+            });
+
+            // Apply visualizers to CTA buttons
+            this.elementVisualizerManager.addToSelector('.cta-button, .primary-button', {
+                role: 'highlight',
+                depth: 0.8,
+                reactivity: 1.5,
+                bleedIntensity: 0.5,
+                bleedRadius: 40,
+                autoGeometry: true,
+                hoverBoost: true
+            });
+
+            // Auto-link adjacent cards for bleeding effect
+            this.elementVisualizerManager.autoLinkAdjacent('.card, .signal-card', 200);
+
+            // Start coordinated updates
+            this.elementVisualizerManager.startCoordination();
+
+            this.logger.info('✨ Element visualizers applied with bleeding effects');
+
+            // Initialize Emergent Interaction System
+            this.logger.info('🌀 Initializing Emergent Interaction System...');
+            this.emergentInteractionSystem = new EmergentInteractionSystem(
+                this.elementVisualizerManager,
+                {
+                    couplingStrength: 0.3,
+                    propagationSpeed: 0.5,
+                    rippleDecay: 0.95,
+                    synchronizationThreshold: 0.7
+                }
+            );
+
+            // Enable morphing on all element visualizers
+            this.emergentInteractionSystem.enableMorphing();
+
+            // Start emergent update loop
+            const updateEmergent = () => {
+                this.emergentInteractionSystem.update();
+                this.emergentInteractionSystem.updateMorphers();
+                requestAnimationFrame(updateEmergent);
+            };
+            requestAnimationFrame(updateEmergent);
+
+            // Trigger ripples on card clicks
+            document.querySelectorAll('.card, .signal-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    this.emergentInteractionSystem.triggerRipple(card, 1.0);
+                });
+            });
+
+            this.logger.info('🌊 Emergent interaction system active with ripple effects');
 
             // Initialize Particle Networks for sections
             this.initializeParticleNetworks();

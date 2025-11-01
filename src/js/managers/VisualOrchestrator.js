@@ -1,12 +1,22 @@
 /**
  * VISUAL ORCHESTRATOR
  * The brain of the entire visual system - choreographs all effects based on context
+ * REFACTORED to integrate with ScrollChoreographer for VIB3+ geometry transitions
  * NO MANUAL CONTROLS - pure emergent behavior
  */
+
+import { ScrollChoreographer } from '../choreography/ScrollChoreographer.js';
 
 export class VisualOrchestrator {
     constructor(canvasManager) {
         this.manager = canvasManager;
+
+        // Initialize scroll choreographer
+        this.choreographer = new ScrollChoreographer({
+            lerpSpeed: 0.08,
+            velocityInfluence: 0.5,
+            transitionZone: 0.3
+        });
         
         // State tracking
         this.state = {
@@ -128,7 +138,14 @@ export class VisualOrchestrator {
     init() {
         this.setupListeners();
         this.startOrchestration();
-        console.log('🎭 Visual Orchestrator initialized - pure choreography mode');
+        console.log('🎭 Visual Orchestrator initialized with ScrollChoreographer - pure choreography mode');
+    }
+
+    /**
+     * Get choreographer instance for external systems
+     */
+    getChoreographer() {
+        return this.choreographer;
     }
     
     setupListeners() {
@@ -240,6 +257,10 @@ export class VisualOrchestrator {
             const currentScrollY = window.pageYOffset;
             this.state.scrollVelocity = Math.abs(currentScrollY - this.lastScrollY) / 100;
             this.lastScrollY = currentScrollY;
+
+            // Update scroll choreographer with absolute scroll position
+            this.choreographer.updateScrollPosition(currentScrollY);
+            const choreographedState = this.choreographer.update();
 
             // Update mouse activity (decay over time)
             const mouseMoved = Math.abs(this.manager.mouseVelocity.x) + Math.abs(this.manager.mouseVelocity.y);
@@ -363,11 +384,41 @@ export class VisualOrchestrator {
     }
     
     broadcastState() {
-        // Dispatch event with current visual state
+        // Get choreographed state
+        const choreographedState = this.choreographer.currentState;
+        const sectionName = this.choreographer.getCurrentSectionName();
+
+        // Merge choreographed state with orchestrator's visual state and multipliers
+        const mergedState = {
+            ...this.visualState,
+            // Override with choreographed parameters
+            geometry: choreographedState.geometry,
+            gridDensity: choreographedState.gridDensity * this.multipliers.userEnergy,
+            morphFactor: choreographedState.morphFactor,
+            chaos: choreographedState.chaos * this.multipliers.mouseActivity,
+            speed: choreographedState.speed * this.multipliers.scrollVelocity,
+            hue: choreographedState.hue,
+            intensity: choreographedState.intensity * this.multipliers.userEnergy,
+            saturation: choreographedState.saturation,
+            // 6D rotations from choreographer
+            rot4dXY: choreographedState.rot4dXY,
+            rot4dXZ: choreographedState.rot4dXZ,
+            rot4dYZ: choreographedState.rot4dYZ,
+            rot4dXW: choreographedState.rot4dXW,
+            rot4dYW: choreographedState.rot4dYW,
+            rot4dZW: choreographedState.rot4dZW
+        };
+
+        // Dispatch event with merged state
         window.dispatchEvent(new CustomEvent('visualStateUpdate', {
             detail: {
-                state: { ...this.visualState },
+                state: mergedState,
                 multipliers: { ...this.multipliers },
+                choreographer: {
+                    section: sectionName,
+                    sectionProgress: this.choreographer.getSectionProgress(),
+                    scrollVelocity: this.choreographer.getScrollVelocity()
+                },
                 context: {
                     section: this.state.currentSection,
                     scroll: this.state.scroll,
