@@ -355,28 +355,61 @@ export class CanvasManager {
     setupGlobalListeners() {
         let lastMouseX = 0;
         let lastMouseY = 0;
-        
-        // Mouse movement
-        document.addEventListener('mousemove', (e) => {
-            const x = e.clientX / window.innerWidth;
-            const y = 1.0 - (e.clientY / window.innerHeight);
-            
+        let pendingMouseUpdate = false;
+        let pendingScrollUpdate = false;
+        let tempMouseX = 0;
+        let tempMouseY = 0;
+        let tempScrollTop = 0;
+
+        // OPTIMIZED: RAF-throttled mouse movement for 60fps max
+        const updateMousePosition = () => {
+            if (!pendingMouseUpdate) return;
+
+            const x = tempMouseX / window.innerWidth;
+            const y = 1.0 - (tempMouseY / window.innerHeight);
+
             this.mouseVelocity.x = x - lastMouseX;
             this.mouseVelocity.y = y - lastMouseY;
-            
+
             this.mousePosition.x = x;
             this.mousePosition.y = y;
-            
+
             lastMouseX = x;
             lastMouseY = y;
+
+            pendingMouseUpdate = false;
+        };
+
+        // Mouse movement - capture but defer update to RAF
+        document.addEventListener('mousemove', (e) => {
+            tempMouseX = e.clientX;
+            tempMouseY = e.clientY;
+            pendingMouseUpdate = true;
         }, { passive: true });
-        
-        // Scroll tracking
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset;
+
+        // OPTIMIZED: RAF-throttled scroll tracking
+        const updateScrollPosition = () => {
+            if (!pendingScrollUpdate) return;
+
             const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            this.scrollProgress = docHeight > 0 ? scrollTop / docHeight : 0;
+            this.scrollProgress = docHeight > 0 ? tempScrollTop / docHeight : 0;
+
+            pendingScrollUpdate = false;
+        };
+
+        // Scroll tracking - capture but defer update to RAF
+        window.addEventListener('scroll', () => {
+            tempScrollTop = window.pageYOffset;
+            pendingScrollUpdate = true;
         }, { passive: true });
+
+        // Apply updates in render loop
+        const originalRender = this.render.bind(this);
+        this.render = function(timestamp) {
+            updateMousePosition();
+            updateScrollPosition();
+            originalRender(timestamp);
+        };
         
         // Viewport resize
         window.addEventListener('resize', () => {

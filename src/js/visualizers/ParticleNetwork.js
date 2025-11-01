@@ -25,6 +25,10 @@ export class ParticleNetworkSystem {
         this.program = null;
         this.lineProgram = null;
         this.isInitialized = false;
+
+        // Spatial grid for O(n) collision detection
+        this.gridSize = 10;
+        this.spatialGrid = new Map();
         
         this.colorSchemes = {
             cyan: { h: 180, s: 0.8, v: 0.9 },
@@ -233,27 +237,8 @@ export class ParticleNetworkSystem {
             particle.vy *= 0.99;
         });
         
-        // Calculate connections
-        this.connections = [];
-        for (let i = 0; i < this.particles.length; i++) {
-            for (let j = i + 1; j < this.particles.length; j++) {
-                const p1 = this.particles[i];
-                const p2 = this.particles[j];
-                
-                const dx = p1.x - p2.x;
-                const dy = p1.y - p2.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist < this.options.connectionDistance) {
-                    const alpha = 1.0 - dist / this.options.connectionDistance;
-                    this.connections.push({
-                        x1: p1.x, y1: p1.y,
-                        x2: p2.x, y2: p2.y,
-                        alpha: alpha * Math.min(p1.alpha, p2.alpha)
-                    });
-                }
-            }
-        }
+        // OPTIMIZED: Use spatial grid for O(n) connection calculation
+        this.calculateConnectionsOptimized();
     }
     
     render(context) {
@@ -403,6 +388,71 @@ export class ParticleNetworkSystem {
         gl.deleteBuffer(hueBuffer);
     }
     
+    // OPTIMIZED: Spatial grid hash function
+    getGridKey(x, y) {
+        const gridX = Math.floor((x + 1) * this.gridSize / 2);
+        const gridY = Math.floor((y + 1) * this.gridSize / 2);
+        return `${gridX},${gridY}`;
+    }
+
+    // OPTIMIZED: Calculate connections using spatial grid (O(n) instead of O(n²))
+    calculateConnectionsOptimized() {
+        // Clear and rebuild spatial grid
+        this.spatialGrid.clear();
+
+        // Populate grid
+        this.particles.forEach((particle, index) => {
+            const key = this.getGridKey(particle.x, particle.y);
+            if (!this.spatialGrid.has(key)) {
+                this.spatialGrid.set(key, []);
+            }
+            this.spatialGrid.get(key).push({ particle, index });
+        });
+
+        // Calculate connections only within nearby grid cells
+        this.connections = [];
+        const processed = new Set();
+
+        this.particles.forEach((p1, i) => {
+            const gridX = Math.floor((p1.x + 1) * this.gridSize / 2);
+            const gridY = Math.floor((p1.y + 1) * this.gridSize / 2);
+
+            // Check current cell and 8 neighboring cells
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const key = `${gridX + dx},${gridY + dy}`;
+                    const cell = this.spatialGrid.get(key);
+
+                    if (cell) {
+                        cell.forEach(({ particle: p2, index: j }) => {
+                            // Skip if already processed or same particle
+                            if (j <= i) return;
+
+                            const pairKey = `${i},${j}`;
+                            if (processed.has(pairKey)) return;
+                            processed.add(pairKey);
+
+                            const dx = p1.x - p2.x;
+                            const dy = p1.y - p2.y;
+                            const distSq = dx * dx + dy * dy;
+                            const maxDistSq = this.options.connectionDistance * this.options.connectionDistance;
+
+                            if (distSq < maxDistSq) {
+                                const dist = Math.sqrt(distSq);
+                                const alpha = 1.0 - dist / this.options.connectionDistance;
+                                this.connections.push({
+                                    x1: p1.x, y1: p1.y,
+                                    x2: p2.x, y2: p2.y,
+                                    alpha: alpha * Math.min(p1.alpha, p2.alpha)
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+        });
+    }
+
     hsv2rgb(h, s, v) {
         h = h / 360;
         const i = Math.floor(h * 6);

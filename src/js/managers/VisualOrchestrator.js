@@ -24,22 +24,22 @@ export class VisualOrchestrator {
             dominantColor: { h: 180, s: 0.8, v: 0.9 }
         };
         
-        // Visual targets (what we're transitioning toward)
+        // OPTIMIZED: Visual targets with reduced default GPU-intensive effects
         this.visualTarget = {
             preset: 'quantum',
             intensity: 0.5,
             chaos: 0.2,
             speed: 0.6,
             hue: 180,
-            rgbOffset: 0.0,
-            moireIntensity: 0.0,
+            rgbOffset: 0.0003,         // Reduced default
+            moireIntensity: 0.02,      // Reduced default
             fractalDecay: 0.0
         };
         
         // Current visual state (smooth interpolation)
         this.visualState = { ...this.visualTarget };
         
-        // Section-based visual profiles WITH FORMS
+        // OPTIMIZED: Section-based visual profiles with reduced GPU-intensive effects
         this.sectionProfiles = {
             hero: {
                 preset: 'quantum',
@@ -48,8 +48,8 @@ export class VisualOrchestrator {
                 chaos: 0.15,
                 speed: 0.5,
                 hue: 180,
-                rgbOffset: 0.002,
-                moireIntensity: 0.1,
+                rgbOffset: 0.0005,         // Reduced from 0.002
+                moireIntensity: 0.03,      // Reduced from 0.1
                 formMix: 1.0
             },
             signals: {
@@ -59,8 +59,8 @@ export class VisualOrchestrator {
                 chaos: 0.4,
                 speed: 0.8,
                 hue: 280,
-                rgbOffset: 0.005,
-                moireIntensity: 0.3,
+                rgbOffset: 0.001,          // Reduced from 0.005
+                moireIntensity: 0.08,      // Reduced from 0.3
                 formMix: 1.0
             },
             capabilities: {
@@ -70,8 +70,8 @@ export class VisualOrchestrator {
                 chaos: 0.1,
                 speed: 0.4,
                 hue: 200,
-                rgbOffset: 0.001,
-                moireIntensity: 0.05,
+                rgbOffset: 0.0003,         // Reduced from 0.001
+                moireIntensity: 0.02,      // Reduced from 0.05
                 formMix: 1.0
             },
             research: {
@@ -81,8 +81,8 @@ export class VisualOrchestrator {
                 chaos: 0.3,
                 speed: 0.6,
                 hue: 240,
-                rgbOffset: 0.003,
-                moireIntensity: 0.2,
+                rgbOffset: 0.0008,         // Reduced from 0.003
+                moireIntensity: 0.06,      // Reduced from 0.2
                 formMix: 1.0
             },
             platforms: {
@@ -92,8 +92,8 @@ export class VisualOrchestrator {
                 chaos: 0.25,
                 speed: 0.7,
                 hue: 160,
-                rgbOffset: 0.004,
-                moireIntensity: 0.25,
+                rgbOffset: 0.001,          // Reduced from 0.004
+                moireIntensity: 0.07,      // Reduced from 0.25
                 formMix: 1.0
             },
             contact: {
@@ -103,8 +103,8 @@ export class VisualOrchestrator {
                 chaos: 0.2,
                 speed: 0.5,
                 hue: 200,
-                rgbOffset: 0.002,
-                moireIntensity: 0.15,
+                rgbOffset: 0.0005,         // Reduced from 0.002
+                moireIntensity: 0.04,      // Reduced from 0.15
                 formMix: 1.0
             }
         };
@@ -132,47 +132,8 @@ export class VisualOrchestrator {
     }
     
     setupListeners() {
-        // Mouse tracking with velocity
-        let mouseTimeout;
-        document.addEventListener('mousemove', (e) => {
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
-            
-            this.state.mouseVelocity.x = Math.abs(x - this.lastMousePos.x);
-            this.state.mouseVelocity.y = Math.abs(y - this.lastMousePos.y);
-            this.state.mousePos.x = x;
-            this.state.mousePos.y = y;
-            
-            // Increase activity
-            this.state.mouseActivity = Math.min(1.0, this.state.mouseActivity + 0.1);
-            this.state.userEnergy = Math.min(1.0, this.state.userEnergy + 0.05);
-            
-            this.lastMousePos = { x, y };
-            
-            clearTimeout(mouseTimeout);
-            mouseTimeout = setTimeout(() => {
-                this.state.mouseActivity *= 0.95;
-            }, 100);
-        }, { passive: true });
-        
-        // Scroll tracking with velocity
-        let scrollTimeout;
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            
-            this.state.scrollVelocity = Math.abs(currentScroll - this.lastScrollY) / 100;
-            this.state.scroll = maxScroll > 0 ? currentScroll / maxScroll : 0;
-            this.lastScrollY = currentScroll;
-            
-            // Increase energy during scroll
-            this.state.userEnergy = Math.min(1.0, this.state.userEnergy + 0.08);
-            
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                this.state.scrollVelocity *= 0.9;
-            }, 100);
-        }, { passive: true });
+        // OPTIMIZED: Use CanvasManager's already-throttled mouse/scroll data instead of duplicate listeners
+        // This eliminates redundant event handlers and improves performance
         
         // Card hover detection
         document.querySelectorAll('.card, .signal-card').forEach(card => {
@@ -267,16 +228,40 @@ export class VisualOrchestrator {
         const update = (timestamp) => {
             const deltaTime = timestamp - this.lastUpdateTime;
             this.lastUpdateTime = timestamp;
-            
+
+            // OPTIMIZED: Pull mouse/scroll data from CanvasManager (already throttled)
+            this.state.mousePos.x = this.manager.mousePosition.x;
+            this.state.mousePos.y = this.manager.mousePosition.y;
+            this.state.mouseVelocity.x = Math.abs(this.manager.mouseVelocity.x);
+            this.state.mouseVelocity.y = Math.abs(this.manager.mouseVelocity.y);
+            this.state.scroll = this.manager.scrollProgress;
+
+            // Calculate scroll velocity
+            const currentScrollY = window.pageYOffset;
+            this.state.scrollVelocity = Math.abs(currentScrollY - this.lastScrollY) / 100;
+            this.lastScrollY = currentScrollY;
+
+            // Update mouse activity (decay over time)
+            const mouseMoved = Math.abs(this.manager.mouseVelocity.x) + Math.abs(this.manager.mouseVelocity.y);
+            if (mouseMoved > 0.001) {
+                this.state.mouseActivity = Math.min(1.0, this.state.mouseActivity + 0.1);
+                this.state.userEnergy = Math.min(1.0, this.state.userEnergy + 0.05);
+            } else {
+                this.state.mouseActivity *= 0.99;
+            }
+
+            // Decay scroll velocity
+            this.state.scrollVelocity *= 0.95;
+
             // Update session time
             this.state.sessionTime += deltaTime / 1000;
-            
+
             // Calculate multipliers based on current state
             this.calculateMultipliers();
-            
+
             // Apply multipliers to target
             this.applyMultipliers();
-            
+
             // Smooth interpolation toward target
             this.interpolateVisualState(deltaTime);
             

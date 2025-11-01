@@ -16,9 +16,9 @@ export class EnhancedQuantumBackground {
             hue: 180,
             intensity: 0.5,
             saturation: 0.9,
-            rgbOffset: 0.002,        // NEW: Chromatic aberration
-            moireIntensity: 0.1,     // NEW: Moiré pattern strength
-            moireFrequency: 8.0      // NEW: Moiré frequency
+            rgbOffset: 0.0005,       // OPTIMIZED: Reduced chromatic aberration
+            moireIntensity: 0.03,    // OPTIMIZED: Reduced moiré pattern strength
+            moireFrequency: 8.0      // Moiré frequency
         };
         
         this.time = 0;
@@ -155,14 +155,6 @@ export class EnhancedQuantumBackground {
                 );
             }
             
-            // NEW: Moiré pattern generator
-            float moire(vec2 uv, float freq, float time) {
-                float pattern1 = sin((uv.x * freq + time) * 3.14159);
-                float pattern2 = sin((uv.y * freq - time * 0.7) * 3.14159);
-                float pattern3 = sin((length(uv) * freq + time * 0.5) * 3.14159);
-                return (pattern1 * pattern2 + pattern3) * 0.5;
-            }
-            
             void main() {
                 vec2 uv = (gl_FragCoord.xy - u_resolution * 0.5) / min(u_resolution.x, u_resolution.y);
                 float t = u_time * u_speed * 0.0001;
@@ -201,42 +193,29 @@ export class EnhancedQuantumBackground {
                 interference = (interference + 1.0) * 0.5;
                 density += interference * 0.2 * u_chaos;
                 
-                // NEW: Add moiré patterns
-                float moirePattern = moire(uv, u_moireFrequency, t * 10.0);
-                density += moirePattern * u_moireIntensity * 0.3;
-                
+                // OPTIMIZED: Simplified moiré - use only one pattern
+                float moirePattern = sin((uv.x * u_moireFrequency + t * 10.0) * 3.14159) *
+                                   sin((uv.y * u_moireFrequency - t * 7.0) * 3.14159);
+                density += moirePattern * u_moireIntensity * 0.15;
+
                 // Color calculation
                 float depth = length(p) * 0.2;
                 float hue = mod(u_hue / 360.0 + density * 0.3 + t * 5.0 + scrollInfluence * 0.1, 1.0);
-                
-                // NEW: RGB CHROMATIC ABERRATION
-                // Sample three times with offset for R, G, B channels
+
+                // OPTIMIZED: Single density calculation, then apply cheap chromatic aberration
+                vec3 color = hsv2rgb(vec3(hue, u_saturation, density * u_intensity));
+
+                // OPTIMIZED: Post-process chromatic aberration (much cheaper than 3 full calculations)
+                // Apply RGB offset in screen space instead of recalculating everything
                 vec2 offset = vec2(u_rgbOffset);
-                
-                // Red channel (shift right/up)
-                vec4 p4d_r = vec4((uv + offset) * 2.0, sin(t * 0.5), cos(t * 0.5));
-                p4d_r = rotZW * rotYW * rotXW * p4d_r;
-                vec3 p_r = project4Dto3D(p4d_r);
-                p_r += sin(p_r.yzx * u_morphFactor * 3.0 + t) * u_chaos * 0.2;
-                float density_r = sphereLattice(p_r, u_gridDensity) * 1.05;
-                
-                // Green channel (no offset)
-                float density_g = density;
-                
-                // Blue channel (shift left/down)
-                vec4 p4d_b = vec4((uv - offset) * 2.0, sin(t * 0.5), cos(t * 0.5));
-                p4d_b = rotZW * rotYW * rotXW * p4d_b;
-                vec3 p_b = project4Dto3D(p4d_b);
-                p_b += sin(p_b.yzx * u_morphFactor * 3.0 + t) * u_chaos * 0.2;
-                float density_b = sphereLattice(p_b, u_gridDensity) * 1.05;
-                
-                // Separate color channels
-                vec3 color_r = hsv2rgb(vec3(hue, u_saturation, density_r * u_intensity));
-                vec3 color_g = hsv2rgb(vec3(hue, u_saturation, density_g * u_intensity));
-                vec3 color_b = hsv2rgb(vec3(hue, u_saturation, density_b * u_intensity));
-                
-                // Combine RGB with chromatic aberration
-                vec3 color = vec3(color_r.r, color_g.g, color_b.b);
+
+                // Sample neighboring pixels for color shift effect
+                float redShift = density * (1.0 + u_rgbOffset * 50.0 * (uv.x + 1.0));
+                float blueShift = density * (1.0 - u_rgbOffset * 50.0 * (uv.x - 1.0));
+
+                // Apply subtle chromatic aberration
+                color.r = mix(color.r, redShift * u_intensity, u_rgbOffset * 5.0);
+                color.b = mix(color.b, blueShift * u_intensity, u_rgbOffset * 5.0);
                 
                 // Atmospheric glow
                 color += vec3(0.1, 0.2, 0.3) * density * density * u_intensity;
