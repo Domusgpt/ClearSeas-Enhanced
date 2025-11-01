@@ -407,5 +407,27 @@
     <script src="scripts/clear-seas-home.js" defer></script>
     <script src="scripts/video-backgrounds.js" defer></script>
     <script src="scripts/vib3-card-interactions.js" defer></script>
+
+    <!-- Enhanced Visualization System -->
+    <script type="module">
+        import { ClearSeasEnhancedApplication } from './src/js/app-enhanced.js';
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        async function initApp() {
+            console.log('🌊 Initializing Clear Seas Enhanced Application...');
+            const app = new ClearSeasEnhancedApplication();
+            await app.initialize();
+
+            // Make available globally for debugging
+            window.clearSeasApp = app;
+            console.log('✅ Application available at window.clearSeasApp');
+        }
+    </script>
 </body>
 </html>

@@ -17,7 +17,7 @@ import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
 import { MicroScrollDebugOverlay } from './debug/MicroScrollDebugOverlay.js';
 import { Utils, Logger } from './utils/Utils.js';
 
-class ClearSeasEnhancedApplication {
+export class ClearSeasEnhancedApplication {
     constructor() {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.canvasManager = null;
