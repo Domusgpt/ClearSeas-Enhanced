@@ -15,6 +15,8 @@ import { ElementVisualizerManager } from './visualizers/ElementVisualizer.js';
 import { EmergentInteractionSystem } from './effects/GeometryMorpher.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
 import { MicroScrollDebugOverlay } from './debug/MicroScrollDebugOverlay.js';
+import { ScrollLockSystem } from './choreography/ScrollLockSystem.js';
+import { TypographyVisualizerSystem } from './visualizers/TypographyVisualizerSystem.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 export class ClearSeasEnhancedApplication {
@@ -29,6 +31,8 @@ export class ClearSeasEnhancedApplication {
         this.elementVisualizerManager = null;
         this.emergentInteractionSystem = null;
         this.microScrollDebugOverlay = null;
+        this.scrollLockSystem = null;
+        this.typographyVisualizerSystem = null;
         this.isInitialized = false;
 
         this.logger.info('🌊 Clear Seas Solutions - Enhanced Combined System');
@@ -203,6 +207,24 @@ export class ClearSeasEnhancedApplication {
             });
 
             this.logger.info('🌊 Emergent interaction system active with ripple effects');
+
+            // Initialize ScrollLockSystem for weare-simone style scroll choreography
+            this.logger.info('🔒 Initializing ScrollLockSystem...');
+            this.scrollLockSystem = new ScrollLockSystem(this.orchestrator, {
+                pinDuration: 1,
+                ease: 'power2.out',
+                visualMorphDuration: 0.8
+            });
+            this.scrollLockSystem.initialize();
+
+            // Initialize TypographyVisualizerSystem for character-level visualizers
+            this.logger.info('📝 Initializing TypographyVisualizerSystem...');
+            this.typographyVisualizerSystem = new TypographyVisualizerSystem(this.orchestrator, {
+                applyTo: 'h1, h2, h3, .hero-lede, .eyebrow',
+                bleedRadius: 30,
+                intensity: 0.4
+            });
+            this.typographyVisualizerSystem.initialize();
 
             // Initialize Particle Networks for sections
             this.initializeParticleNetworks();
