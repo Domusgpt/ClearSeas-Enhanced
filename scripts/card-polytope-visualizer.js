@@ -10,6 +10,32 @@
 (function() {
   'use strict';
 
+  const clamp = (value, min = 0, max = 1) => {
+    if (!Number.isFinite(value)) {
+      return min;
+    }
+    if (value <= min) {
+      return min;
+    }
+    if (value >= max) {
+      return max;
+    }
+    return value;
+  };
+
+  const lerp = (a, b, t) => a + (b - a) * clamp(t, 0, 1);
+
+  const wrapHue = (hue) => {
+    if (!Number.isFinite(hue)) {
+      return 0;
+    }
+    let wrapped = hue % 360;
+    if (wrapped < 0) {
+      wrapped += 360;
+    }
+    return wrapped;
+  };
+
   // ============================================
   // CARD POLYTOPE VISUALIZER CLASS
   // ============================================
@@ -49,6 +75,21 @@
         rot4dYW: 0,
         rot4dZW: 0
       };
+
+      this.baseHue = this.params.hue;
+      this.choreographyTargets = {
+        gridDensity: this.params.gridDensity,
+        morphFactor: this.params.morphFactor,
+        chaos: this.params.chaos,
+        speed: this.params.speed,
+        intensity: this.params.intensity,
+        intensityBase: this.params.intensity,
+        hue: this.params.hue
+      };
+      this.visibility = true;
+      this.focusBoost = 0;
+      this.lastRenderTime = performance.now();
+      this.needsUpdate = true;
 
       this.init();
     }
@@ -449,6 +490,76 @@
       }
     }
 
+    setVisibility(isVisible) {
+      const next = Boolean(isVisible);
+      if (this.visibility !== next) {
+        this.visibility = next;
+        this.needsUpdate = this.needsUpdate || next;
+      }
+    }
+
+    setFocusBoost(value) {
+      const next = clamp(value, 0, 1);
+      if (Math.abs(next - this.focusBoost) > 0.001) {
+        this.focusBoost = next;
+        this.needsUpdate = true;
+      }
+    }
+
+    setChoreographyState(detail = {}) {
+      const density = Number.isFinite(detail.density) ? detail.density : 1;
+      const stability = Number.isFinite(detail.stability) ? detail.stability : 1;
+      const morph = Number.isFinite(detail.morph) ? detail.morph : 0;
+      const surge = Number.isFinite(detail.surgeWeight) ? detail.surgeWeight : 0;
+      const focus = Number.isFinite(detail.focusWeight) ? detail.focusWeight : 0;
+      const pointerFocus = Number.isFinite(detail.pointerFocus) ? detail.pointerFocus : 0;
+      const focusCombined = clamp(focus + pointerFocus, 0, 1.5);
+      const release = Number.isFinite(detail.releaseWeight) ? detail.releaseWeight : 0;
+      const energy = Number.isFinite(detail.energy) ? detail.energy : 0.35;
+      const instability = Number.isFinite(detail.instability)
+        ? detail.instability
+        : clamp(1 - stability, 0, 1);
+
+      const targetDensity = clamp(12 + density * 8, 6, 36);
+      const targetMorph = clamp(0.35 + morph * 0.85 + surge * 0.25, 0.2, 1.65);
+      const targetChaos = clamp(0.12 + instability * 0.9 + release * 0.2 + focusCombined * 0.1, 0.05, 1.6);
+      const targetSpeed = clamp(0.5 + energy * 1.35 + surge * 0.25 + focusCombined * 0.08, 0.35, 2.4);
+      const targetIntensityBase = clamp(0.5 + energy * 0.4 + focusCombined * 0.28, 0.25, 1.35);
+      const targetHueShift = (surge * -28) + (focusCombined * 26) + (release * 14);
+
+      if (Math.abs(this.choreographyTargets.gridDensity - targetDensity) > 0.001) {
+        this.choreographyTargets.gridDensity = targetDensity;
+        this.needsUpdate = true;
+      }
+      if (Math.abs(this.choreographyTargets.morphFactor - targetMorph) > 0.001) {
+        this.choreographyTargets.morphFactor = targetMorph;
+        this.needsUpdate = true;
+      }
+      if (Math.abs(this.choreographyTargets.chaos - targetChaos) > 0.001) {
+        this.choreographyTargets.chaos = targetChaos;
+        this.needsUpdate = true;
+      }
+      if (Math.abs(this.choreographyTargets.speed - targetSpeed) > 0.001) {
+        this.choreographyTargets.speed = targetSpeed;
+        this.needsUpdate = true;
+      }
+
+      if (Math.abs(this.choreographyTargets.intensityBase - targetIntensityBase) > 0.001) {
+        this.choreographyTargets.intensityBase = targetIntensityBase;
+        this.needsUpdate = true;
+      }
+
+      const nextHue = wrapHue(this.baseHue + targetHueShift);
+      if (Math.abs(this.choreographyTargets.hue - nextHue) > 0.001) {
+        this.choreographyTargets.hue = nextHue;
+        this.needsUpdate = true;
+      }
+    }
+
+    needsFrame() {
+      return this.visibility || this.needsUpdate;
+    }
+
     setMousePosition(x, y) {
       this.mouseX = x;
       this.mouseY = y;
@@ -460,7 +571,56 @@
     }
 
     render() {
-      if (!this.program) return;
+      if (!this.program) return false;
+
+      const now = performance.now();
+      const delta = Math.min((now - this.lastRenderTime) / 1000, 0.12);
+      this.lastRenderTime = now;
+
+      const easing = clamp(delta * (this.visibility ? 6 : 3), 0, 1);
+
+      const nextIntensityTarget = clamp(
+        this.choreographyTargets.intensityBase + this.focusBoost * 0.4,
+        0.25,
+        1.6
+      );
+      if (Math.abs(this.choreographyTargets.intensity - nextIntensityTarget) > 0.0005) {
+        this.choreographyTargets.intensity = nextIntensityTarget;
+      }
+
+      const updates = [
+        ['gridDensity', this.choreographyTargets.gridDensity],
+        ['morphFactor', this.choreographyTargets.morphFactor],
+        ['chaos', this.choreographyTargets.chaos],
+        ['speed', this.choreographyTargets.speed],
+        ['intensity', this.choreographyTargets.intensity]
+      ];
+
+      let deltaMagnitude = 0;
+      updates.forEach(([key, target]) => {
+        const current = this.params[key];
+        const next = lerp(current, target, easing);
+        this.params[key] = next;
+        deltaMagnitude = Math.max(deltaMagnitude, Math.abs(next - current));
+      });
+
+      const currentHue = this.params.hue;
+      let targetHue = wrapHue(this.choreographyTargets.hue);
+      let hueDelta = targetHue - currentHue;
+      if (hueDelta > 180) {
+        hueDelta -= 360;
+      } else if (hueDelta < -180) {
+        hueDelta += 360;
+      }
+      const nextHue = currentHue + hueDelta * easing;
+      this.params.hue = wrapHue(nextHue);
+      deltaMagnitude = Math.max(deltaMagnitude, Math.abs(nextHue - currentHue));
+
+      this.needsUpdate = deltaMagnitude > 0.0005;
+
+      if (!this.visibility) {
+        return this.needsUpdate;
+      }
 
       this.resize();
       this.gl.useProgram(this.program);
@@ -485,6 +645,8 @@
       this.gl.uniform1f(this.uniforms.rot4dZW, this.params.rot4dZW);
 
       this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+
+      return this.visibility || this.needsUpdate;
     }
 
     destroy() {
@@ -494,6 +656,7 @@
       if (this.gl && this.buffer) {
         this.gl.deleteBuffer(this.buffer);
       }
+      this.needsUpdate = false;
     }
   }
 
@@ -641,15 +804,29 @@
     console.log('Card polytope visualizer initialized');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function shouldAutoInit() {
+    if (window.__CARD_POLYTOPE_DISABLE_AUTOINIT__ === true) {
+      return false;
+    }
+    const root = document.documentElement;
+    if (root && root.dataset && root.dataset.cardPolytopeAutoinit === 'false') {
+      return false;
+    }
+    return true;
+  }
+
+  if (shouldAutoInit()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      init();
+    }
   }
 
   // Expose for external control
   window.CardPolytopeVisualizer = CardPolytopeVisualizer;
   window.CardPolytopeEnhancer = CardPolytopeEnhancer;
+  window.initCardPolytopeEnhancer = init;
 
 })();
 
