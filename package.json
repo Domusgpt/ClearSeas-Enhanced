@@ -29,5 +29,9 @@
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "split-type": "^0.3.4"
   }
 }

@@ -11,10 +11,15 @@ import { VisualOrchestrator } from './managers/VisualOrchestrator.js';
 import { EnhancedQuantumBackground } from './visualizers/EnhancedQuantumBackground.js';
 import { ParticleNetworkSystem } from './visualizers/ParticleNetwork.js';
 import { PolytopalFieldVisualizer } from './visualizers/PolytopalFieldVisualizer.js';
+import { ElementVisualizerManager } from './visualizers/ElementVisualizer.js';
+import { EmergentInteractionSystem } from './effects/GeometryMorpher.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
+import { MicroScrollDebugOverlay } from './debug/MicroScrollDebugOverlay.js';
+import { ScrollLockSystem } from './choreography/ScrollLockSystem.js';
+import { TypographyVisualizerSystem } from './visualizers/TypographyVisualizerSystem.js';
 import { Utils, Logger } from './utils/Utils.js';
 
-class ClearSeasEnhancedApplication {
+export class ClearSeasEnhancedApplication {
     constructor() {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.canvasManager = null;
@@ -23,6 +28,11 @@ class ClearSeasEnhancedApplication {
         this.quantumBackground = null;
         this.particleNetworks = new Map();
         this.cardFractalSystem = null;
+        this.elementVisualizerManager = null;
+        this.emergentInteractionSystem = null;
+        this.microScrollDebugOverlay = null;
+        this.scrollLockSystem = null;
+        this.typographyVisualizerSystem = null;
         this.isInitialized = false;
 
         this.logger.info('🌊 Clear Seas Solutions - Enhanced Combined System');
@@ -73,8 +83,9 @@ class ClearSeasEnhancedApplication {
             quantumContainer.style.width = '100%';
             quantumContainer.style.height = '100%';
             quantumContainer.style.pointerEvents = 'none';
-            quantumContainer.style.zIndex = '0';
-            quantumContainer.style.opacity = '0.6';
+            quantumContainer.style.zIndex = '1'; // ABOVE polytopal field but BELOW content
+            quantumContainer.style.opacity = '0.8';
+            quantumContainer.style.mixBlendMode = 'screen'; // Blend with background
             document.body.insertBefore(quantumContainer, document.body.firstChild);
 
             const bgCanvas = this.canvasManager.createCanvas('quantum-background', {
@@ -121,11 +132,99 @@ class ClearSeasEnhancedApplication {
                     'quantum-background'
                 );
                 this.quantumBackground.initialize();
+
+                // Connect choreographer for scroll-responsive geometry transitions
+                this.quantumBackground.setChoreographer(this.orchestrator.getChoreographer());
+                this.logger.info('📜 ScrollChoreographer connected to quantum background');
             }
 
             // Initialize Card Fractal System
             this.logger.info('🔮 Initializing Card Fractal System...');
             this.cardFractalSystem = new CardFractalSystem();
+
+            // Initialize Element Visualizer Manager
+            this.logger.info('🎨 Initializing Element Visualizer Manager...');
+            this.elementVisualizerManager = new ElementVisualizerManager(this.orchestrator);
+
+            // Apply visualizers to cards with bleeding effect
+            this.elementVisualizerManager.addToSelector('.card, .signal-card', {
+                role: 'accent',
+                depth: 0.7,
+                reactivity: 1.2,
+                bleedIntensity: 0.4,
+                bleedRadius: 60,
+                autoGeometry: true,
+                hoverBoost: true
+            });
+
+            // Apply visualizers to CTA buttons
+            this.elementVisualizerManager.addToSelector('.cta-button, .primary-button', {
+                role: 'highlight',
+                depth: 0.8,
+                reactivity: 1.5,
+                bleedIntensity: 0.5,
+                bleedRadius: 40,
+                autoGeometry: true,
+                hoverBoost: true
+            });
+
+            // Auto-link adjacent cards for bleeding effect
+            this.elementVisualizerManager.autoLinkAdjacent('.card, .signal-card', 200);
+
+            // Start coordinated updates
+            this.elementVisualizerManager.startCoordination();
+
+            this.logger.info('✨ Element visualizers applied with bleeding effects');
+
+            // Initialize Emergent Interaction System
+            this.logger.info('🌀 Initializing Emergent Interaction System...');
+            this.emergentInteractionSystem = new EmergentInteractionSystem(
+                this.elementVisualizerManager,
+                {
+                    couplingStrength: 0.3,
+                    propagationSpeed: 0.5,
+                    rippleDecay: 0.95,
+                    synchronizationThreshold: 0.7
+                }
+            );
+
+            // Enable morphing on all element visualizers
+            this.emergentInteractionSystem.enableMorphing();
+
+            // Start emergent update loop
+            const updateEmergent = () => {
+                this.emergentInteractionSystem.update();
+                this.emergentInteractionSystem.updateMorphers();
+                requestAnimationFrame(updateEmergent);
+            };
+            requestAnimationFrame(updateEmergent);
+
+            // Trigger ripples on card clicks
+            document.querySelectorAll('.card, .signal-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    this.emergentInteractionSystem.triggerRipple(card, 1.0);
+                });
+            });
+
+            this.logger.info('🌊 Emergent interaction system active with ripple effects');
+
+            // Initialize ScrollLockSystem for weare-simone style scroll choreography
+            this.logger.info('🔒 Initializing ScrollLockSystem...');
+            this.scrollLockSystem = new ScrollLockSystem(this.orchestrator, {
+                pinDuration: 1,
+                ease: 'power2.out',
+                visualMorphDuration: 0.8
+            });
+            this.scrollLockSystem.initialize();
+
+            // Initialize TypographyVisualizerSystem for character-level visualizers
+            this.logger.info('📝 Initializing TypographyVisualizerSystem...');
+            this.typographyVisualizerSystem = new TypographyVisualizerSystem(this.orchestrator, {
+                applyTo: 'h1, h2, h3, .hero-lede, .eyebrow',
+                bleedRadius: 30,
+                intensity: 0.4
+            });
+            this.typographyVisualizerSystem.initialize();
 
             // Initialize Particle Networks for sections
             this.initializeParticleNetworks();
@@ -137,6 +236,13 @@ class ClearSeasEnhancedApplication {
             this.canvasManager.start();
 
             this.isInitialized = true;
+
+            // Initialize debug overlay for MicroScrollChoreographer
+            const choreographer = this.orchestrator.getChoreographer();
+            if (choreographer) {
+                this.microScrollDebugOverlay = new MicroScrollDebugOverlay(choreographer);
+                this.logger.info('🎯 MicroScrollDebugOverlay initialized - Press "D" to toggle');
+            }
 
             this.logger.info('✅ Clear Seas Enhanced initialized successfully');
 
