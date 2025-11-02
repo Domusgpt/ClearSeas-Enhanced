@@ -10,10 +10,14 @@
  * © 2025 Clear Seas Solutions LLC - Paul Phillips
  */
 
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+// GSAP loaded from CDN in index.html
+// Access via window.gsap and window.ScrollTrigger
+const gsap = window.gsap;
+const ScrollTrigger = window.ScrollTrigger;
 
-gsap.registerPlugin(ScrollTrigger);
+if (gsap && ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+}
 
 export class ScrollLockSystem {
     constructor(visualOrchestrator, options = {}) {

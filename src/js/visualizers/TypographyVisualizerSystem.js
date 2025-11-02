@@ -9,7 +9,9 @@
  * © 2025 Clear Seas Solutions LLC - Paul Phillips
  */
 
-import SplitType from 'split-type';
+// SplitType loaded from CDN in index.html
+const SplitType = window.SplitType;
+
 import { UnifiedQuantumVisualizer } from './UnifiedQuantumVisualizer.js';
 
 export class TypographyVisualizerSystem {
