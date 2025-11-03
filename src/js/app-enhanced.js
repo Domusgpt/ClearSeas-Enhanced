@@ -74,25 +74,19 @@ export class ClearSeasEnhancedApplication {
             polytopalCanvas.options.autoResize = true;
 
             // Create Quantum Background Canvas (Secondary Layer)
-            this.logger.info('🌌 Creating Quantum Background Canvas...');
-            const quantumContainer = document.createElement('div');
-            quantumContainer.id = 'quantum-background';
-            quantumContainer.style.position = 'fixed';
-            quantumContainer.style.top = '0';
-            quantumContainer.style.left = '0';
-            quantumContainer.style.width = '100%';
-            quantumContainer.style.height = '100%';
-            quantumContainer.style.pointerEvents = 'none';
-            quantumContainer.style.zIndex = '1'; // ABOVE polytopal field but BELOW content
-            quantumContainer.style.opacity = '0.8';
-            quantumContainer.style.mixBlendMode = 'screen'; // Blend with background
-            document.body.insertBefore(quantumContainer, document.body.firstChild);
+            this.logger.info('🌌 Initializing Quantum Background Canvas...');
+            const quantumContainer = document.getElementById('quantum-background');
+
+            if (!quantumContainer) {
+                this.logger.error('❌ quantum-background canvas not found in HTML!');
+                throw new Error('quantum-background canvas element missing');
+            }
 
             const bgCanvas = this.canvasManager.createCanvas('quantum-background', {
                 container: quantumContainer,
                 width: window.innerWidth,
                 height: window.innerHeight,
-                alpha: false,
+                alpha: true,
                 antialias: false,
                 webgl2: true,
                 powerPreference: 'high-performance',
@@ -218,13 +212,15 @@ export class ClearSeasEnhancedApplication {
             this.scrollLockSystem.initialize();
 
             // Initialize TypographyVisualizerSystem for character-level visualizers
-            this.logger.info('📝 Initializing TypographyVisualizerSystem...');
-            this.typographyVisualizerSystem = new TypographyVisualizerSystem(this.orchestrator, {
-                applyTo: 'h1, h2, h3, .hero-lede, .eyebrow',
-                bleedRadius: 30,
-                intensity: 0.4
-            });
-            this.typographyVisualizerSystem.initialize();
+            // DISABLED: Creates too many WebGL contexts (browsers limit ~16)
+            // this.logger.info('📝 Initializing TypographyVisualizerSystem...');
+            // this.typographyVisualizerSystem = new TypographyVisualizerSystem(this.orchestrator, {
+            //     applyTo: 'h1, h2, h3, .hero-lede, .eyebrow',
+            //     bleedRadius: 30,
+            //     intensity: 0.4
+            // });
+            // this.typographyVisualizerSystem.initialize();
+            this.logger.info('📝 TypographyVisualizerSystem DISABLED (too many WebGL contexts)');
 
             // Initialize Particle Networks for sections
             this.initializeParticleNetworks();

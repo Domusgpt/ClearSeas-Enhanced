@@ -32,6 +32,8 @@
     height: 100%;
     z-index: 1;
     pointer-events: none;
+    opacity: 0.9;
+    mix-blend-mode: screen;
 }
 
 /* Make sure main content is above visualizers */
