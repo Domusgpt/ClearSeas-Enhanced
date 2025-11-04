@@ -60,17 +60,15 @@ section {
 .signal-card,
 .card,
 .capability-card {
-    position: absolute; /* Required for Z-depth animation */
-    left: 50%;
-    top: 50%;
+    position: relative; /* Keep in document flow - DON'T use absolute */
     transform-style: preserve-3d;
     backface-visibility: hidden;
     will-change: transform, opacity, filter;
 
     /* Initial state - far in Z-space (set by JavaScript) */
-    transform: translate(-50%, -50%) translateZ(-820px);
-    opacity: 0.1;
-    filter: blur(4px);
+    /* NOTE: JavaScript will set translateZ, scale, opacity, blur */
+    /* Cards stay in their normal layout positions (flexbox/grid) */
+    opacity: 1; /* Start visible, JS will animate */
 
     /* Smooth transitions */
     transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),

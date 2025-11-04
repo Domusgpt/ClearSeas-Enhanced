@@ -296,13 +296,13 @@ export class OrthogonalScrollChoreographer {
     prepareCardsForDepth(cards) {
         cards.forEach(card => {
             // Set initial state - far in Z-space
+            // Keep cards in their normal layout position (relative positioning from CSS)
             card.style.transformStyle = 'preserve-3d';
-            card.style.transform = `translate(-50%, -50%) translateZ(${this.config.depths.far}px)`;
+            card.style.transform = `translateZ(${this.config.depths.far}px) scale(${this.config.scales.far})`;
             card.style.opacity = this.config.opacities.far;
             card.style.filter = `blur(${this.config.blurs.far}px)`;
-            card.style.position = 'absolute';
-            card.style.left = '50%';
-            card.style.top = '50%';
+
+            // Transition properties already set in CSS
             card.style.transition = `transform ${this.config.cardTransitionDuration}s ${this.config.cardTransitionEase},
                                      opacity ${this.config.cardTransitionDuration}s ${this.config.cardTransitionEase},
                                      filter ${this.config.cardTransitionDuration}s ${this.config.cardTransitionEase}`;
@@ -315,8 +315,7 @@ export class OrthogonalScrollChoreographer {
     addCardIntroduction(timeline, card, position) {
         // Phase 1: Approaching (far → approaching)
         timeline.to(card, {
-            z: this.config.depths.approaching,
-            scale: this.config.scales.approaching,
+            transform: `translateZ(${this.config.depths.approaching}px) scale(${this.config.scales.approaching})`,
             opacity: this.config.opacities.approaching,
             filter: `blur(${this.config.blurs.approaching}px)`,
             duration: 0.3,
@@ -325,8 +324,7 @@ export class OrthogonalScrollChoreographer {
 
         // Phase 2: Focused (approaching → focused)
         timeline.to(card, {
-            z: this.config.depths.focused,
-            scale: this.config.scales.focused,
+            transform: `translateZ(${this.config.depths.focused}px) scale(${this.config.scales.focused})`,
             opacity: this.config.opacities.focused,
             filter: `blur(${this.config.blurs.focused}px)`,
             duration: 0.3,
@@ -335,7 +333,7 @@ export class OrthogonalScrollChoreographer {
 
         // Phase 3: Existence - card stays in focus, add subtle rotation
         timeline.to(card, {
-            rotationY: '+=5',
+            transform: `translateZ(${this.config.depths.focused}px) scale(${this.config.scales.focused}) rotateY(5deg)`,
             duration: 0.2,
             yoyo: true,
             repeat: 1,
@@ -385,8 +383,7 @@ export class OrthogonalScrollChoreographer {
     addSectionExit(timeline, cards, position) {
         cards.forEach((card, i) => {
             timeline.to(card, {
-                z: this.config.depths.exiting,
-                scale: this.config.scales.exiting,
+                transform: `translateZ(${this.config.depths.exiting}px) scale(${this.config.scales.exiting})`,
                 opacity: this.config.opacities.exiting,
                 filter: `blur(${this.config.blurs.exiting}px)`,
                 duration: 0.4,
@@ -450,13 +447,8 @@ export class OrthogonalScrollChoreographer {
         params.chaos = section.visualizerState.chaos + (Math.sin(progress * Math.PI * 4) * 0.1);
 
         // Cards in focus get subtle parallax
-        cards.forEach((card, i) => {
-            const cardFocus = this.getCardFocus(progress, i, cards.length);
-            if (cardFocus > 0.5) {
-                const parallax = (progress - 0.5) * 20;
-                card.style.transform += ` translateX(${parallax}px)`;
-            }
-        });
+        // Note: Parallax disabled to avoid conflicting with GSAP timeline animations
+        // GSAP controls all transform values during scroll
     }
 
     /**
