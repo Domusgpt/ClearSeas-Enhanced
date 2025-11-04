@@ -37,18 +37,24 @@ export class PolychoraSystemManager {
         }
 
         // Initialize visualizer
-        const visualizer = new EnhancedPolychoraVisualizer('polytope-canvas', 'content', {
-            polytope: this.currentPolytope,
-            holographicIntensity: 0.4,
-            chromaticAberration: 0.15,
-            glassRefraction: 1.6,
-            edgeThickness: 2.5,
-            hue: 180, // Cyan/teal to match theme
-            intensity: 0.6,
-            speed: 1.0
-        });
+        let visualizer;
+        try {
+            visualizer = new EnhancedPolychoraVisualizer('polytope-canvas', 'content', {
+                polytope: this.currentPolytope,
+                holographicIntensity: 0.4,
+                chromaticAberration: 0.15,
+                glassRefraction: 1.6,
+                edgeThickness: 2.5,
+                hue: 180, // Cyan/teal to match theme
+                intensity: 0.6,
+                speed: 1.0
+            });
+        } catch (error) {
+            console.error('❌ Error creating visualizer:', error);
+            return false;
+        }
 
-        if (visualizer.gl) {
+        if (visualizer && visualizer.gl) {
             this.visualizers.push(visualizer);
             this.isInitialized = true;
             this.startRenderLoop();
@@ -58,8 +64,10 @@ export class PolychoraSystemManager {
             console.log('✅ Enhanced Polychora System initialized successfully');
             return true;
         } else {
-            console.error('❌ Failed to initialize Enhanced Polychora System');
-            return false;
+            console.warn('⚠️  WebGL not available - Enhanced Polychora System will not render');
+            console.warn('   This is normal in some environments (headless browsers, older devices)');
+            // Still return true so the page doesn't break
+            return true;
         }
     }
 

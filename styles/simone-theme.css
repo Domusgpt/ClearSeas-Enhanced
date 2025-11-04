@@ -64,11 +64,10 @@
  * ======================================== */
 
 body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: var(--font-secondary);
-    line-height: 1.6;
-    letter-spacing: -0.01em;
+    /* Use !important only for color scheme to override existing styles */
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    /* Don't override layout properties that might already be set */
 }
 
 /* ========================================
