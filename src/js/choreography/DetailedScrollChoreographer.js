@@ -9,8 +9,8 @@
  */
 
 export class DetailedScrollChoreographer {
-    constructor(quantumBackground, elementManager) {
-        this.background = quantumBackground;
+    constructor(backgroundWrapper, elementManager) {
+        this.visualizer = backgroundWrapper ? backgroundWrapper.visualizer : null;
         this.elementManager = elementManager;
         this.gsap = window.gsap;
         this.ScrollTrigger = window.ScrollTrigger;
@@ -61,8 +61,8 @@ export class DetailedScrollChoreographer {
                 scrub: 1,
                 onUpdate: (self) => {
                     // Background starts SPHERE, morphs to more chaotic
-                    if (this.background && this.background.visualizer) {
-                        const viz = this.background.visualizer.params;
+                    if (this.visualizer && this.visualizer.params) {
+                        const viz = this.visualizer.params;
                         viz.chaos = 0.1 + self.progress * 0.3;
                         viz.intensity = 0.5 + self.progress * 0.3;
                         viz.rot4dXW += 0.001;
@@ -114,8 +114,8 @@ export class DetailedScrollChoreographer {
                 scrub: 1,
                 onUpdate: (self) => {
                     // Morph to CRYSTAL geometry
-                    if (this.background && this.background.visualizer) {
-                        const viz = this.background.visualizer.params;
+                    if (this.visualizer && this.visualizer.params) {
+                        const viz = this.visualizer.params;
                         viz.geometry = 2 + (self.progress * 5); // Morph from SPHERE(2) to CRYSTAL(7)
                         viz.morphFactor = self.progress;
                         viz.hue = 180 + self.progress * 100; // Shift hue
@@ -185,8 +185,8 @@ export class DetailedScrollChoreographer {
                 scrub: 1,
                 onUpdate: (self) => {
                     // Morph to FRACTAL
-                    if (this.background && this.background.visualizer) {
-                        const viz = this.background.visualizer.params;
+                    if (this.visualizer && this.visualizer.params) {
+                        const viz = this.visualizer.params;
                         viz.geometry = 5; // FRACTAL
                         viz.chaos = 0.3 + self.progress * 0.4;
                         viz.hue = 200 + self.progress * 60;
@@ -236,8 +236,8 @@ export class DetailedScrollChoreographer {
                 scrub: 1,
                 onUpdate: (self) => {
                     // Final calm state - TETRAHEDRON
-                    if (this.background && this.background.visualizer) {
-                        const viz = this.background.visualizer.params;
+                    if (this.visualizer && this.visualizer.params) {
+                        const viz = this.visualizer.params;
                         viz.geometry = 0; // TETRAHEDRON
                         viz.chaos = 0.4 - self.progress * 0.3; // Calm down
                         viz.hue = 240;
@@ -304,8 +304,8 @@ export class DetailedScrollChoreographer {
                 scrub: 1,
                 onUpdate: (self) => {
                     // Sync with background
-                    if (this.background && this.background.visualizer) {
-                        const bgViz = this.background.visualizer.params;
+                    if (this.visualizer && this.visualizer.params) {
+                        const bgViz = this.visualizer.params;
                         vizData.visualizer.params.hue = bgViz.hue;
                         vizData.visualizer.params.geometry = bgViz.geometry;
 
@@ -320,9 +320,9 @@ export class DetailedScrollChoreographer {
     }
 
     animateBackgroundContinuously() {
-        if (!this.background || !this.background.visualizer) return;
+        if (!this.visualizer || !this.visualizer.params) return;
 
-        const viz = this.background.visualizer.params;
+        const viz = this.visualizer.params;
 
         // Continuous rotation
         this.gsap.to(viz, {
