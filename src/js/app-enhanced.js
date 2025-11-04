@@ -15,7 +15,7 @@ import { ElementVisualizerManager } from './visualizers/ElementVisualizer.js';
 import { EmergentInteractionSystem } from './effects/GeometryMorpher.js';
 import { CardFractalSystem } from './visualizers/CardFractalSystem.js';
 import { MicroScrollDebugOverlay } from './debug/MicroScrollDebugOverlay.js';
-import { UnifiedScrollChoreographer } from './choreography/UnifiedScrollChoreographer.js';
+import { DetailedScrollChoreographer } from './choreography/DetailedScrollChoreographer.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 export class ClearSeasEnhancedApplication {
@@ -30,7 +30,7 @@ export class ClearSeasEnhancedApplication {
         this.elementVisualizerManager = null;
         this.emergentInteractionSystem = null;
         this.microScrollDebugOverlay = null;
-        this.unifiedScrollChoreographer = null;
+        this.detailedScrollChoreographer = null;
         this.isInitialized = false;
 
         this.logger.info('🌊 Clear Seas Solutions - Enhanced Combined System');
@@ -200,18 +200,14 @@ export class ClearSeasEnhancedApplication {
 
             this.logger.info('🌊 Emergent interaction system active with ripple effects');
 
-            // Initialize UnifiedScrollChoreographer for choreographed morphing
-            this.logger.info('🎭 Initializing UnifiedScrollChoreographer...');
-            this.unifiedScrollChoreographer = new UnifiedScrollChoreographer(
+            // Initialize DetailedScrollChoreographer for card-by-card animations
+            this.logger.info('🎬 Initializing DetailedScrollChoreographer...');
+            this.detailedScrollChoreographer = new DetailedScrollChoreographer(
                 this.quantumBackground,
-                this.elementVisualizerManager,
-                {
-                    pinDuration: '200%',
-                    scrub: 1
-                }
+                this.elementVisualizerManager
             );
-            this.unifiedScrollChoreographer.initialize();
-            this.logger.info('✅ Unified scroll choreography active');
+            this.detailedScrollChoreographer.initialize();
+            this.logger.info('✅ Detailed scroll choreography active with card-by-card animations');
 
             // Initialize Particle Networks for sections
             this.initializeParticleNetworks();
