@@ -7,17 +7,17 @@
  */
 
 import { WorkingQuantumVisualizer } from './visualizers/WorkingQuantumVisualizer.js';
-import { DetailedScrollChoreographer } from './choreography/DetailedScrollChoreographer.js';
+import { OrthogonalScrollChoreographer } from './choreography/OrthogonalScrollChoreographer.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 export class ClearSeasEnhancedApplication {
     constructor() {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.quantumVisualizer = null;
-        this.detailedScrollChoreographer = null;
+        this.orthogonalScrollChoreographer = null;
         this.isInitialized = false;
 
-        this.logger.info('🌊 Clear Seas Solutions - Working Visualizer System');
+        this.logger.info('🌊 Clear Seas Solutions - Orthogonal Depth Progression System');
     }
 
     async initialize() {
@@ -46,14 +46,13 @@ export class ClearSeasEnhancedApplication {
             this.startRenderLoop();
             this.logger.info('✅ Render loop started');
 
-            // Create scroll choreographer
-            this.logger.info('🎬 Creating DetailedScrollChoreographer...');
-            this.detailedScrollChoreographer = new DetailedScrollChoreographer(
-                { visualizer: this.quantumVisualizer },
-                null
+            // Create orthogonal scroll choreographer
+            this.logger.info('🎬 Creating OrthogonalScrollChoreographer...');
+            this.orthogonalScrollChoreographer = new OrthogonalScrollChoreographer(
+                this.quantumVisualizer
             );
-            this.detailedScrollChoreographer.initialize();
-            this.logger.info('✅ Scroll choreography initialized');
+            this.orthogonalScrollChoreographer.initialize();
+            this.logger.info('✅ Orthogonal depth progression choreography initialized');
 
             this.isInitialized = true;
             this.logger.info('🎉 Application initialized successfully');

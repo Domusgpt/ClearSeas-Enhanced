@@ -4,15 +4,22 @@
  */
 
 /* ========================================
- * Z-INDEX HIERARCHY - CRITICAL FOR VISIBILITY
+ * Z-INDEX HIERARCHY - ORTHOGONAL DEPTH SYSTEM
  * ========================================
  * -3: Polytopal field (bottom background)
- * -2: Texture layer
- * 1: Quantum background (WebGL geometry)
- * 2-5: Element visualizers (behind card content)
- * 10: Content (.site-main)
+ * -1: Quantum background (revealed through content gaps)
+ * 1: Content (.site-main) - above visualizer
  * 12: Header (sticky)
+ *
+ * Visualizer is BEHIND everything, revealed strategically
  */
+
+/* 3D Perspective Setup for Orthogonal Depth Progression */
+body {
+    perspective: 1200px;
+    perspective-origin: center center;
+    transform-style: preserve-3d;
+}
 
 #polytopal-field {
     position: fixed;
@@ -24,31 +31,51 @@
     pointer-events: none;
 }
 
+/* Quantum Background - Behind EVERYTHING */
 #quantum-background {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    z-index: -1; /* Behind all content */
     pointer-events: none;
-    opacity: 0.9;
+    opacity: 0; /* Start hidden, revealed by JavaScript */
     mix-blend-mode: screen;
 }
 
-/* Make sure main content is above visualizers */
+/* Main content above visualizer */
 .site-main {
     position: relative;
-    z-index: 10;
+    z-index: 1;
 }
 
-/* Cards need relative positioning for element visualizers */
+/* Sections support 3D transforms */
+section {
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+/* Cards - Orthogonal Z-Axis Depth Progression */
 .signal-card,
 .card,
 .capability-card {
-    position: relative;
-    /* Element visualizers will be positioned absolutely inside with z-index 0 */
-    /* Card content will be above with z-index 1 */
+    position: absolute; /* Required for Z-depth animation */
+    left: 50%;
+    top: 50%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    will-change: transform, opacity, filter;
+
+    /* Initial state - far in Z-space (set by JavaScript) */
+    transform: translate(-50%, -50%) translateZ(-820px);
+    opacity: 0.1;
+    filter: blur(4px);
+
+    /* Smooth transitions */
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Ensure card content is above visualizers */
