@@ -68,9 +68,24 @@ export class ClearSeasEnhancedApplication {
     }
 
     startRenderLoop() {
+        let errorCount = 0;
+        const maxErrors = 10;
         const render = () => {
-            if (this.quantumVisualizer) {
-                this.quantumVisualizer.render();
+            try {
+                if (this.quantumVisualizer) {
+                    this.quantumVisualizer.render();
+                }
+                // Reset error count on successful render
+                errorCount = 0;
+            } catch (error) {
+                errorCount++;
+                this.logger.error(`Render error (${errorCount}/${maxErrors}):`, error);
+
+                // Stop render loop if too many consecutive errors
+                if (errorCount >= maxErrors) {
+                    this.logger.error('Too many render errors, stopping render loop');
+                    return;
+                }
             }
             requestAnimationFrame(render);
         };

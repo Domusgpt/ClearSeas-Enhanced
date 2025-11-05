@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clear Seas Solutions — Artificial Intelligence & Machine Cognition Architecture</title>
     <meta name="description" content="Clear Seas Solutions designs avant-garde artificial intelligence architecture, machine cognition systems, and enterprise technology integrations informed by decades of global maritime innovation.">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,12 +17,18 @@
     <link rel="stylesheet" href="styles/clear-seas-enhanced.css">
     <link rel="stylesheet" href="styles/video-backgrounds.css">
 
-    <!-- GSAP from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <!-- GSAP from CDN with SRI -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
+            integrity="sha384-HOvlOYPIs/zjoIkWUGXkVmXsjr8GuZLV+Q+rcPwmJOVZVpvTSXQChiN4t9Euv9Vc"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"
+            integrity="sha384-P8VzCVnT9NBUkMrpcIZrJbA7EBjJvh/fJS6PmP+4nLIM284DtsImIv8D0fFjIkeh"
+            crossorigin="anonymous"></script>
 
-    <!-- SplitType from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/dist/index.min.js"></script>
+    <!-- SplitType from CDN with SRI -->
+    <script src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/dist/index.min.js"
+            integrity="sha384-qhGa4JxHKAhO2EZeAxho+91Bv86LP2GZ83iNGk/vcw4ZdzbHv5/n1NuuYaqYTqcT"
+            crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- Polytopal Field Canvas Background -->
@@ -72,7 +81,7 @@
                     <p class="hero-lede">We're an independent AI consultancy crafting custom-fit solutions for businesses of all sizes—from ambitious startups to global enterprises. No corporate upselling, no cookie-cutter frameworks, just lean, effective AI that actually solves your problems.</p>
                     <div class="hero-cta">
                         <a class="btn btn-primary vcodex-holo-button" href="mailto:connect@clearseas.ai">Get your free consultation</a>
-                        <a class="btn btn-ghost" href="https://parserator.com" target="_blank" rel="noopener">Parserator SaaS (beta)</a>
+                        <a class="btn btn-ghost" href="https://parserator.com" target="_blank" rel="noopener noreferrer">Parserator SaaS (beta)</a>
                     </div>
                     <ul class="hero-tags">
                         <li>Small Business Friendly</li>
@@ -178,7 +187,7 @@
                 </div>
                 <div class="platform-grid">
                     <!-- Reposiologist -->
-                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://reposiologist-beta.web.app" target="_blank" rel="noopener" data-animate="reveal">
+                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://reposiologist-beta.web.app" target="_blank" rel="noopener noreferrer" data-animate="reveal">
                         <div class="platform-heading">
                             <h3>Reposiologist</h3>
                             <span class="status">Live beta</span>
@@ -188,7 +197,7 @@
                     </a>
 
                     <!-- Parserator -->
-                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://parserator.com" target="_blank" rel="noopener" data-animate="reveal" style="--reveal-delay: 0.1s;">
+                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://parserator.com" target="_blank" rel="noopener noreferrer" data-animate="reveal" style="--reveal-delay: 0.1s;">
                         <div class="platform-heading">
                             <h3>Parserator</h3>
                             <span class="status">Live beta</span>
@@ -198,7 +207,7 @@
                     </a>
 
                     <!-- Nimbus Guardian -->
-                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://nimbus-guardian.web.app/" target="_blank" rel="noopener" data-animate="reveal" style="--reveal-delay: 0.2s;">
+                    <a class="platform-card vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://nimbus-guardian.web.app/" target="_blank" rel="noopener noreferrer" data-animate="reveal" style="--reveal-delay: 0.2s;">
                         <div class="platform-heading">
                             <h3>Nimbus Guardian</h3>
                             <span class="status">Live</span>
@@ -293,7 +302,7 @@
                 </div>
                 <div class="platform-grid" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--space-8);">
                     <!-- PPP -->
-                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://domusgpt.github.io/ppp-info-site/" target="_blank" rel="noopener" data-animate="reveal">
+                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://domusgpt.github.io/ppp-info-site/" target="_blank" rel="noopener noreferrer" data-animate="reveal">
                         <div class="lab-header">
                             <span class="lab-label">Research Program</span>
                             <span class="lab-metric">Active</span>
@@ -310,7 +319,7 @@
                     </a>
 
                     <!-- EPO -->
-                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://entropic-principles.web.app/" target="_blank" rel="noopener" data-animate="reveal" style="--reveal-delay: 0.15s;">
+                    <a class="research-lab vcodex-neoskeu-card vcodex-glass vcodex-hover-lift" href="https://entropic-principles.web.app/" target="_blank" rel="noopener noreferrer" data-animate="reveal" style="--reveal-delay: 0.15s;">
                         <div class="lab-header">
                             <span class="lab-label">Research Program</span>
                             <span class="lab-metric">Active</span>
@@ -398,7 +407,7 @@
                 <div class="contact-actions" data-animate="reveal" style="--reveal-delay: 0.1s;">
                     <a class="btn btn-primary vcodex-holo-button" href="mailto:connect@clearseas.ai">Get your free consultation</a>
                     <a class="btn btn-ghost" href="mailto:connect@clearseas.ai">Email us directly</a>
-                    <a class="btn btn-soft" href="https://parserator.com" target="_blank" rel="noopener">See Parserator Demo</a>
+                    <a class="btn btn-soft" href="https://parserator.com" target="_blank" rel="noopener noreferrer">See Parserator Demo</a>
                 </div>
             </div>
         </section>
