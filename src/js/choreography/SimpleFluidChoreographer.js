@@ -61,6 +61,11 @@ export class SimpleFluidChoreographer {
     }
 
     initialize() {
+        // Make visualizer visible
+        const canvas = document.getElementById('quantum-background');
+        if (canvas) {
+            canvas.style.opacity = '0.8';
+        }
         // 1. Setup text animations (like Simone)
         this.setupTextAnimations();
 
