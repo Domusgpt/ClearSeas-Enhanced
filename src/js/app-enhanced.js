@@ -7,17 +7,17 @@
  */
 
 import { WorkingQuantumVisualizer } from './visualizers/WorkingQuantumVisualizer.js';
-import { FocusLockChoreographer } from './choreography/FocusLockChoreographer.js';
+import { SimpleFluidChoreographer } from './choreography/SimpleFluidChoreographer.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 export class ClearSeasEnhancedApplication {
     constructor() {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.quantumVisualizer = null;
-        this.focusLockChoreographer = null;
+        this.simpleChoreographer = null;
         this.isInitialized = false;
 
-        this.logger.info('🌊 Clear Seas Solutions - Focus-Lock Choreography System');
+        this.logger.info('🌊 Clear Seas Solutions - Simple Fluid Choreography');
     }
 
     async initialize() {
@@ -46,13 +46,13 @@ export class ClearSeasEnhancedApplication {
             this.startRenderLoop();
             this.logger.info('✅ Render loop started');
 
-            // Create focus-lock choreographer
-            this.logger.info('🔒 Creating FocusLockChoreographer...');
-            this.focusLockChoreographer = new FocusLockChoreographer(
+            // Create simple fluid choreographer
+            this.logger.info('💧 Creating SimpleFluidChoreographer...');
+            this.simpleChoreographer = new SimpleFluidChoreographer(
                 this.quantumVisualizer
             );
-            this.focusLockChoreographer.initialize();
-            this.logger.info('✅ Focus-lock choreography initialized');
+            this.simpleChoreographer.initialize();
+            this.logger.info('✅ Simple fluid choreography initialized');
 
             this.isInitialized = true;
             this.logger.info('🎉 Application initialized successfully');
