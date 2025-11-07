@@ -7,17 +7,17 @@
  */
 
 import { WorkingQuantumVisualizer } from './visualizers/WorkingQuantumVisualizer.js';
-import { OrthogonalScrollChoreographer } from './choreography/OrthogonalScrollChoreographer.js';
+import { FocusLockChoreographer } from './choreography/FocusLockChoreographer.js';
 import { Utils, Logger } from './utils/Utils.js';
 
 export class ClearSeasEnhancedApplication {
     constructor() {
         this.logger = new Logger('ClearSeasEnhanced', 'info');
         this.quantumVisualizer = null;
-        this.orthogonalScrollChoreographer = null;
+        this.focusLockChoreographer = null;
         this.isInitialized = false;
 
-        this.logger.info('🌊 Clear Seas Solutions - Orthogonal Depth Progression System');
+        this.logger.info('🌊 Clear Seas Solutions - Focus-Lock Choreography System');
     }
 
     async initialize() {
@@ -46,13 +46,13 @@ export class ClearSeasEnhancedApplication {
             this.startRenderLoop();
             this.logger.info('✅ Render loop started');
 
-            // Create orthogonal scroll choreographer
-            this.logger.info('🎬 Creating OrthogonalScrollChoreographer...');
-            this.orthogonalScrollChoreographer = new OrthogonalScrollChoreographer(
+            // Create focus-lock choreographer
+            this.logger.info('🔒 Creating FocusLockChoreographer...');
+            this.focusLockChoreographer = new FocusLockChoreographer(
                 this.quantumVisualizer
             );
-            this.orthogonalScrollChoreographer.initialize();
-            this.logger.info('✅ Orthogonal depth progression choreography initialized');
+            this.focusLockChoreographer.initialize();
+            this.logger.info('✅ Focus-lock choreography initialized');
 
             this.isInitialized = true;
             this.logger.info('🎉 Application initialized successfully');
