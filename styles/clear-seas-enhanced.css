@@ -56,24 +56,24 @@ section {
     position: relative;
 }
 
-/* Cards - Orthogonal Z-Axis Depth Progression */
+/* Cards - Morphing Transition System */
 .signal-card,
 .card,
 .capability-card {
-    position: relative; /* Keep in document flow - DON'T use absolute */
+    position: relative; /* Keep in document flow */
     transform-style: preserve-3d;
     backface-visibility: hidden;
     will-change: transform, opacity, filter;
 
-    /* Initial state - far in Z-space (set by JavaScript) */
-    /* NOTE: JavaScript will set translateZ, scale, opacity, blur */
-    /* Cards stay in their normal layout positions (flexbox/grid) */
-    opacity: 1; /* Start visible, JS will animate */
+    /* Start visible - morphing system handles animations */
+    opacity: 1 !important;
+    transform: none;
+    filter: none;
 
-    /* Smooth transitions */
-    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                filter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Smooth transitions - managed by GSAP morphing system */
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                filter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Ensure card content is above visualizers */
