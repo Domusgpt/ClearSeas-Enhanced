@@ -28,7 +28,7 @@ export class OrthogonalScrollChoreographer {
 
         this.gsap.registerPlugin(this.ScrollTrigger);
 
-        // Configuration
+        // Configuration - OPTIMIZED for smooth, fluid animations
         this.config = {
             // Z-depth stages for card progression
             depths: {
@@ -47,22 +47,22 @@ export class OrthogonalScrollChoreographer {
             // Opacity stages
             opacities: {
                 far: 0.1,
-                approaching: 0.45,
+                approaching: 0.5,    // Increased for smoother transition
                 focused: 1.0,
-                exiting: 0.28
+                exiting: 0.25        // Adjusted for better exit fade
             },
             // Blur stages for depth perception
             blurs: {
-                far: 4,
-                approaching: 2,
+                far: 5,              // Increased for more dramatic depth
+                approaching: 2.5,    // Adjusted for smoother progression
                 focused: 0,
-                exiting: 3
+                exiting: 4           // Increased for better exit effect
             },
-            // Timing
-            cardTransitionDuration: 0.8,
-            cardTransitionEase: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            // Timing - OPTIMIZED for fluid motion
+            cardTransitionDuration: 1.0,  // Slightly longer for smoothness
+            cardTransitionEase: 'power3.out',  // Smoother easing curve
             sectionLockDuration: '300%', // How long each section is pinned
-            visualizerRevealDuration: 0.6,
+            visualizerRevealDuration: 0.8,  // Longer for smoother reveals
             ...options
         };
 
@@ -204,7 +204,10 @@ export class OrthogonalScrollChoreographer {
      */
     setupVisualizerLayering() {
         const canvas = document.getElementById('quantum-background');
-        if (!canvas) return;
+        if (!canvas) {
+            console.warn('⚠️ Quantum background canvas not found');
+            return;
+        }
 
         // Set visualizer behind everything
         canvas.style.position = 'fixed';
@@ -214,7 +217,17 @@ export class OrthogonalScrollChoreographer {
         canvas.style.height = '100%';
         canvas.style.zIndex = '-1'; // Behind all content
         canvas.style.pointerEvents = 'none';
-        canvas.style.opacity = '0'; // Start hidden, reveal strategically
+
+        // Initial smooth fade-in animation
+        this.gsap.fromTo(canvas,
+            { opacity: 0 },
+            {
+                opacity: 0.5,
+                duration: 2.0,
+                ease: 'power2.out',
+                onComplete: () => console.log('🌌 Visualizer initial fade-in complete')
+            }
+        );
 
         console.log('🌌 Visualizer positioned behind all content');
     }
@@ -311,6 +324,7 @@ export class OrthogonalScrollChoreographer {
 
     /**
      * Add card introduction animation - emerge from Z-depth
+     * OPTIMIZED for smooth, dramatic entrance
      */
     addCardIntroduction(timeline, card, position) {
         // Phase 1: Approaching (far → approaching)
@@ -318,8 +332,8 @@ export class OrthogonalScrollChoreographer {
             transform: `translateZ(${this.config.depths.approaching}px) scale(${this.config.scales.approaching})`,
             opacity: this.config.opacities.approaching,
             filter: `blur(${this.config.blurs.approaching}px)`,
-            duration: 0.3,
-            ease: 'power2.out'
+            duration: 0.4,  // Longer for smoother motion
+            ease: 'power3.out'  // Smoother easing
         }, position);
 
         // Phase 2: Focused (approaching → focused)
@@ -327,54 +341,56 @@ export class OrthogonalScrollChoreographer {
             transform: `translateZ(${this.config.depths.focused}px) scale(${this.config.scales.focused})`,
             opacity: this.config.opacities.focused,
             filter: `blur(${this.config.blurs.focused}px)`,
-            duration: 0.3,
-            ease: 'power2.inOut'
-        }, position + 0.05);
+            duration: 0.5,  // Longer for smoother arrival
+            ease: 'power3.inOut'  // Smoother easing
+        }, position + 0.06);
 
-        // Phase 3: Existence - card stays in focus, add subtle rotation
+        // Phase 3: Subtle settle - card gently settles into focus
         timeline.to(card, {
-            transform: `translateZ(${this.config.depths.focused}px) scale(${this.config.scales.focused}) rotateY(5deg)`,
-            duration: 0.2,
+            transform: `translateZ(${this.config.depths.focused}px) scale(${this.config.scales.focused}) rotateY(2deg)`,
+            duration: 0.3,
             yoyo: true,
             repeat: 1,
             ease: 'sine.inOut'
-        }, position + 0.1);
+        }, position + 0.12);
     }
 
     /**
      * Add occlusion and morph - visualizer changes during occlusion
+     * OPTIMIZED for smooth, dramatic geometry transitions
      */
     addOcclusionAndMorph(timeline, section, nextGeometry, position) {
         if (!this.visualizer || !this.visualizer.params) return;
 
         const params = this.visualizer.params;
 
-        // Dim visualizer (occluded by content)
+        // Dim visualizer smoothly (occluded by content)
         timeline.to('#quantum-background', {
-            opacity: 0.2,
-            duration: 0.3,
-            ease: 'power2.in'
+            opacity: 0.15,  // Dimmer for more dramatic effect
+            duration: 0.4,  // Longer fade
+            ease: 'power3.in'  // Smoother easing
         }, position);
 
-        // During occlusion, morph geometry
+        // During occlusion, morph geometry with smooth parameters
         timeline.to(params, {
             geometry: nextGeometry,
             morphFactor: 1.0,
-            chaos: Math.min(1, params.chaos + 0.2),
-            duration: 0.4,
-            ease: 'power2.inOut',
+            chaos: Math.min(1, params.chaos + 0.15),  // Gentler chaos increase
+            duration: 0.6,  // Longer morph duration
+            ease: 'power3.inOut',  // Smoother easing
             onUpdate: () => {
-                // Boost density during morph for dramatic effect
-                params.gridDensity = section.visualizerState.gridDensity * (1 + params.morphFactor * 0.5);
+                // Smoothly boost density during morph for dramatic effect
+                const morphProgress = params.morphFactor || 0;
+                params.gridDensity = section.visualizerState.gridDensity * (1 + morphProgress * 0.4);
             }
-        }, position + 0.1);
+        }, position + 0.15);
 
-        // Reveal morphed visualizer
+        // Reveal morphed visualizer with smooth fade-in
         timeline.to('#quantum-background', {
-            opacity: 0.7,
-            duration: 0.3,
-            ease: 'power2.out'
-        }, position + 0.5);
+            opacity: 0.75,  // Slightly brighter reveal
+            duration: 0.5,  // Longer reveal
+            ease: 'power3.out'  // Smoother easing
+        }, position + 0.6);
     }
 
     /**
@@ -433,6 +449,7 @@ export class OrthogonalScrollChoreographer {
         if (!this.visualizer || !this.visualizer.params) return;
 
         const params = this.visualizer.params;
+        const canvas = document.getElementById('quantum-background');
 
         // Continuous 4D rotation based on scroll
         params.rot4dXW += progress * 0.001;
@@ -445,6 +462,24 @@ export class OrthogonalScrollChoreographer {
 
         // Chaos pulses with scroll
         params.chaos = section.visualizerState.chaos + (Math.sin(progress * Math.PI * 4) * 0.1);
+
+        // DYNAMIC OPACITY: Morph visualizer visibility during scroll
+        // When cards are entering/exiting (transitioning), BOOST visualizer
+        // When cards are in focus (reading content), DIM visualizer
+        if (canvas) {
+            // Calculate card focus state
+            const cardFocusWave = Math.sin(progress * Math.PI * cards.length); // Oscillates with each card
+
+            // Base opacity from section intensity
+            const baseOpacity = section.visualizerState.intensity || 0.5;
+
+            // Modulate opacity: boost during transitions, dim during focus
+            // Range: baseOpacity ± 0.25
+            const dynamicOpacity = baseOpacity + (cardFocusWave * 0.25);
+
+            // Clamp to reasonable range
+            canvas.style.opacity = Math.max(0.2, Math.min(0.9, dynamicOpacity));
+        }
 
         // Cards in focus get subtle parallax
         // Note: Parallax disabled to avoid conflicting with GSAP timeline animations
@@ -462,35 +497,51 @@ export class OrthogonalScrollChoreographer {
 
     /**
      * Called when entering a section
+     * OPTIMIZED for smooth visualizer state transitions
      */
     onSectionEnter(section, sectionIndex) {
         this.currentSection = sectionIndex;
         console.log(`📍 Entering section: ${section.id}`);
 
-        // Apply visualizer state
+        // Smoothly apply visualizer state with GSAP for animated transition
         if (this.visualizer && this.visualizer.params) {
-            Object.assign(this.visualizer.params, section.visualizerState);
+            const params = this.visualizer.params;
+
+            // Animate each parameter smoothly
+            this.gsap.to(params, {
+                hue: section.visualizerState.hue,
+                intensity: section.visualizerState.intensity,
+                chaos: section.visualizerState.chaos,
+                speed: section.visualizerState.speed,
+                gridDensity: section.visualizerState.gridDensity,
+                duration: 1.2,  // Smooth transition duration
+                ease: 'power3.inOut'
+            });
+
+            // Geometry change happens instantly (handled by timeline)
+            params.geometry = section.visualizerState.geometry;
         }
 
-        // Reveal visualizer
+        // Smooth visualizer reveal
         this.gsap.to('#quantum-background', {
             opacity: section.visualizerState.intensity,
-            duration: 0.6,
-            ease: 'power2.out'
+            duration: 0.8,
+            ease: 'power3.out'
         });
     }
 
     /**
      * Called when leaving a section
+     * OPTIMIZED for smooth transitions between sections
      */
     onSectionLeave(section, sectionIndex) {
         console.log(`👋 Leaving section: ${section.id}`);
 
-        // Dim visualizer during transition
+        // Smooth dim during section transition
         this.gsap.to('#quantum-background', {
-            opacity: 0.2,
-            duration: 0.4,
-            ease: 'power2.in'
+            opacity: 0.25,
+            duration: 0.6,
+            ease: 'power3.in'
         });
     }
 

@@ -40,8 +40,10 @@ body {
     height: 100%;
     z-index: -1; /* Behind all content */
     pointer-events: none;
-    opacity: 0; /* Start hidden, revealed by JavaScript */
+    opacity: 0; /* Start hidden - JavaScript controls dynamic opacity during scroll */
     mix-blend-mode: screen;
+    /* Smooth transitions for JS-controlled opacity (disabled to let GSAP handle) */
+    /* transition: opacity 0.3s ease-out; */
 }
 
 /* Main content above visualizer */
