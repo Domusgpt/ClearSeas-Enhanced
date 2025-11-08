@@ -271,13 +271,25 @@ export class OrthogonalScrollChoreographer {
                     mainTimeline.to('#quantum-background', {
                         opacity: timelinePoint.intensity,
                         duration: this.config.visualizerRevealDuration,
-                        ease: 'power2.out'
+                        ease: 'power3.out'
                     }, position);
                     break;
 
                 case 'cardIntroduction':
                     if (cards[timelinePoint.cardIndex]) {
                         this.addCardIntroduction(mainTimeline, cards[timelinePoint.cardIndex], position);
+                        // Dim visualizer slightly when card is in focus
+                        mainTimeline.to('#quantum-background', {
+                            opacity: `-=${0.15}`,  // Relative decrease
+                            duration: 0.3,
+                            ease: 'sine.inOut'
+                        }, position + 0.05);
+                        // Boost back after card settles
+                        mainTimeline.to('#quantum-background', {
+                            opacity: `+=${0.15}`,  // Relative increase
+                            duration: 0.3,
+                            ease: 'sine.inOut'
+                        }, position + 0.15);
                     }
                     break;
 
